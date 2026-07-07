@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Free GST calculator — add or remove GST at 0.25%, 3%, 5%, 12%, 18% or 28%. Instant CGST/SGST split.">
+<title>GST Calculator — CleanITR</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230e7c66'/%3E%3Cpath d='M18 8l-7.5 8L6 12' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://cleanitr.netlify.app/tools/gst-calculator.html">
+<meta property="og:title" content="GST Calculator — CleanITR">
+<meta property="og:description" content="Free GST calculator — add or remove GST at 0.25%, 3%, 5%, 12%, 18% or 28%. Instant CGST/SGST split.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tools/_calc.css">
+</head>
+<body>
+<header>
+  <div class="nav">
+    <a href="/" class="brand">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div class="brand-text"><div class="name">Clean<span>ITR</span></div><div class="sub">Tax Platform by Chartered Accountants</div></div>
+    </a>
+    <a href="/tools.html" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All tools</a>
+  </div>
+</header>
+<main class="page">
+  <div class="wrap">
+    <span class="eyebrow">Free tool</span>
+    <h1>GST Calculator</h1>
+    <p class="sub">Add GST to a base amount (exclusive) or extract GST from a total (inclusive) — with an automatic CGST + SGST split at every slab rate.</p>
+    <div class="card">
+      <div class="field"><label for="amt">Amount (₹)</label><input type="number" id="amt" placeholder="e.g. 10000" min="0"></div>
+      <div class="row">
+        <div class="field"><label for="rate">GST rate (%)</label><select id="rate"><option>0.25</option><option>3</option><option>5</option><option>12</option><option selected>18</option><option>28</option></select></div>
+        <div class="field"><label for="type">Calculation type</label><select id="type"><option value="add">Add GST (amount is exclusive)</option><option value="remove">Remove GST (amount is inclusive)</option></select></div>
+      </div>
+      <button class="btn" onclick="calc()">Calculate GST</button>
+      <div class="result" id="res"></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-box"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Who should use this</h3><p>Shopkeepers, freelancers and businesses preparing invoices or checking whether a quoted price is GST-inclusive.</p></div>
+      <div class="info-box"><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>Example</h3><p>₹10,000 service @ 18% → GST ₹1,800 (CGST ₹900 + SGST ₹900) → invoice total ₹11,800.</p></div>
+    </div>
+    <div class="cta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Need this reviewed or have a doubt? Write to us at <a href="mailto:info.cleanitr@gmail.com">info.cleanitr@gmail.com</a> or message us on <a href="https://wa.me/917838808704" target="_blank" rel="noopener">WhatsApp</a>.</span>
+    </div>
+    <p class="note">For intra-state supplies GST splits equally into CGST and SGST; for inter-state supplies the full amount is IGST.</p>
+  </div>
+</main>
+<footer>© 2026 Clean ITR · Tax Platform by Chartered Accountants.</footer>
+<script>
+const inr=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+function calc(){
+  const amt=+document.getElementById('amt').value||0;
+  const rate=+document.getElementById('rate').value||0;
+  const type=document.getElementById('type').value;
+  let base,gst,total;
+  if(type==='add'){base=amt;gst=amt*rate/100;total=base+gst}
+  else{total=amt;base=amt/(1+rate/100);gst=total-base}
+  const el=document.getElementById('res');
+  el.innerHTML=`
+    <div class="r-row"><span>Base amount (taxable value)</span><b>${inr(base)}</b></div>
+    <div class="r-row"><span>GST @ ${rate}%</span><b>${inr(gst)}</b></div>
+    <div class="r-row"><span>CGST ${rate/2}% + SGST ${rate/2}%</span><b>${inr(gst/2)} + ${inr(gst/2)}</b></div>
+    <div class="r-row"><span>Total amount</span><b class="r-big">${inr(total)}</b></div>`;
+  el.classList.add('show');
+}
+
+// Copy result + count-up on the highlighted amount
+(function(){
+  const resEl=document.getElementById('res');
+  if(!resEl)return;
+  new MutationObserver(()=>{
+    if(!resEl.innerHTML.trim())return;
+    // count-up animation on .r-big amounts
+    resEl.querySelectorAll('.r-big').forEach(el=>{
+      const m=el.textContent.match(/[\d,]+/);
+      if(!m)return;
+      const target=parseInt(m[0].replace(/,/g,''),10);
+      if(!isFinite(target)||target<=0)return;
+      const t0=performance.now(),dur=500,prefix=el.textContent.slice(0,el.textContent.indexOf(m[0]));
+      (function step(t){
+        const p=Math.min((t-t0)/dur,1);
+        el.textContent=prefix+Math.round(target*(0.2+0.8*p)).toLocaleString('en-IN');
+        if(p<1)requestAnimationFrame(step);
+      })(t0);
+    });
+    // copy button
+    if(!resEl.querySelector('.copy-btn')){
+      const b=document.createElement('button');
+      b.className='copy-btn';b.type='button';b.textContent='Copy result';
+      b.onclick=()=>{
+        const txt=[...resEl.querySelectorAll('.r-row,.r-best')].map(r=>r.innerText.replace(/\n/g,' ')).join('\n');
+        navigator.clipboard.writeText('CleanITR — '+document.title.split('—')[0].trim()+'\n'+txt).then(()=>{
+          b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy result',1500);
+        });
+      };
+      resEl.appendChild(b);
+    }
+  }).observe(resEl,{childList:true});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Income Tax Calculator — FY 2025-26 (AY 2026-27)</title>
+<meta name="description" content="Free Income Tax Calculator for FY 2025-26 (AY 2026-27) by CleanITR — compare old vs new regime, with marginal relief. Built by Chartered Accountants.">
+<link rel="canonical" href="https://cleanitr.netlify.app/tools/income-tax-calculator.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230e7c66'/%3E%3Cpath d='M18 8l-7.5 8L6 12' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14252b;          /* dark green-black — headings */
+    --ink-soft:#5a6b68;
+    --paper:#f5f3ee;        /* warm cream background */
+    --card:#ffffff;
+    --line:#e6e2d8;         /* warm hairline */
+    /* ===== CleanITR BRAND COLORS (matched to site) ===== */
+    --teal:#0d6e5c;         /* primary forest-emerald green */
+    --teal-deep:#0a5647;
+    --teal-wash:#e3f0ec;    /* light green pill/badge bg */
+    /* ================================================== */
+    --amber:#c8791a;        /* old regime accent */
+    --amber-wash:#f7ead6;   /* peach highlight (like 'done right') */
+    --green:#0d6e5c;        /* savings / good */
+    --red:#c2453d;
+    --shadow:0 1px 2px rgba(20,37,43,.04),0 10px 30px rgba(20,37,43,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--paper);color:var(--ink);line-height:1.55;
+    -webkit-font-smoothing:antialiased;padding:24px 16px 80px;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+  .back{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--teal-deep);text-decoration:none;margin-bottom:18px;padding:7px 13px;border:1px solid var(--line);border-radius:20px;background:var(--card);transition:.15s}
+  .back:hover{background:var(--teal-wash);border-color:var(--teal-wash)}
+  .back svg{width:15px;height:15px}
+
+  /* Header */
+  header{margin-bottom:28px}
+  .brand{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+  .brand-mark{display:flex;align-items:center;gap:12px}
+  .brand-icon{width:40px;height:40px;border-radius:11px;background:var(--teal);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(13,110,92,.3)}
+  .brand-words{display:flex;flex-direction:column;gap:1px}
+  .brand-logo{font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--ink);line-height:1.05}
+  .brand-logo-accent{color:var(--teal)}
+  .brand-tag{font-size:9.5px;color:var(--ink-soft);font-weight:700;letter-spacing:.06em}
+  .brand-badge{font-size:12px;font-weight:700;color:var(--teal-deep);background:var(--teal-wash);padding:7px 14px;border-radius:20px;letter-spacing:.01em;white-space:nowrap}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-deep);font-weight:700;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:24px;height:2px;background:var(--amber);border-radius:2px}
+  h1{font-size:clamp(26px,4.5vw,38px);font-weight:800;letter-spacing:-.025em;margin:8px 0 6px;color:var(--ink)}
+  .sub{color:var(--ink-soft);font-size:15px;max-width:60ch}
+
+  .year-tabs{display:flex;gap:10px;margin-top:16px;max-width:520px}
+  .year-tabs button{flex:1;display:flex;flex-direction:column;gap:2px;align-items:flex-start;padding:12px 16px;border:1.5px solid var(--line);background:#fff;border-radius:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+  .year-tabs button .yt-main{font-size:15px;font-weight:800;color:var(--ink)}
+  .year-tabs button .yt-sub{font-size:11px;color:var(--ink-soft);font-weight:500}
+  .year-tabs button.on{border-color:var(--teal);background:var(--teal-wash);box-shadow:0 0 0 3px var(--teal-wash)}
+  .year-tabs button.on .yt-main{color:var(--teal-deep)}
+  .year-tabs button:hover:not(.on){border-color:var(--teal)}
+
+  /* Layout */
+  .grid{display:grid;grid-template-columns:1fr;gap:20px}
+  @media(min-width:820px){.grid{grid-template-columns:1fr 1fr;align-items:start}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+  .card-pad{padding:22px}
+  .card h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:16px}
+
+  /* Field */
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  label.lab{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;font-weight:600;margin-bottom:6px;gap:8px}
+  label.lab .hint{font-weight:400;color:var(--ink-soft);font-size:12px}
+  .input-money{position:relative}
+  .input-money::before{content:"₹";position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-weight:600;font-size:15px}
+  input[type=number],select{
+    width:100%;padding:12px 14px 12px 30px;border:1.5px solid var(--line);border-radius:10px;
+    font-size:16px;font-family:inherit;color:var(--ink);background:#fff;transition:border-color .15s,box-shadow .15s;
+  }
+  select{padding-left:14px}
+  input[type=number]:focus,select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-wash)}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  .toggle-grp{display:flex;gap:8px;flex-wrap:wrap}
+  .toggle-grp button{
+    flex:1;min-width:90px;padding:10px 12px;border:1.5px solid var(--line);background:#fff;border-radius:10px;
+    font-family:inherit;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s;
+  }
+  .toggle-grp button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .toggle-grp button:hover:not(.on){border-color:var(--teal)}
+
+  /* Collapsible deduction block */
+  .collapse-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:12px 0;user-select:none}
+  .collapse-head .chev{transition:transform .2s;color:var(--ink-soft)}
+  .collapse-head.open .chev{transform:rotate(90deg)}
+  .collapse-body{display:none;padding-top:4px;border-top:1px solid var(--line);margin-top:2px}
+  .collapse-body.open{display:block}
+  .note{font-size:12px;color:var(--ink-soft);background:var(--teal-wash);padding:8px 12px;border-radius:8px;margin-bottom:14px;border-left:3px solid var(--teal)}
+
+  /* Results */
+  .verdict{padding:20px 22px;border-radius:16px;color:#fff;margin-bottom:18px;background:linear-gradient(135deg,var(--teal),var(--teal-deep))}
+  .verdict .small{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.85;font-weight:600}
+  .verdict .big{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:2px 0}
+  .verdict .save{font-size:14px;opacity:.95}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+  .regime{border:1.5px solid var(--line);border-radius:12px;padding:16px;position:relative;transition:border-color .15s}
+  .regime.win{border-color:var(--teal);background:var(--teal-wash)}
+  .regime .rname{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .regime.old .rname .dot{width:8px;height:8px;border-radius:50%;background:var(--amber)}
+  .regime.new .rname .dot{width:8px;height:8px;border-radius:50%;background:var(--teal)}
+  .regime .rtax{font-size:24px;font-weight:800;margin:8px 0 2px;letter-spacing:-.01em}
+  .regime .rmeta{font-size:12px;color:var(--ink-soft)}
+  .badge{position:absolute;top:-9px;right:12px;background:var(--teal);color:#fff;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:20px}
+
+  /* Breakdown table */
+  .bd{width:100%;font-size:14px;border-collapse:collapse}
+  .bd th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);padding:6px 0;border-bottom:1px solid var(--line)}
+  .bd td{padding:9px 0;border-bottom:1px solid var(--line)}
+  .bd td:last-child,.bd th:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bd tr.total td{font-weight:800;border-bottom:none;padding-top:12px;font-size:16px}
+  .bd tr.sub td{color:var(--ink-soft)}
+  .bd .pos{color:var(--green)}
+  .bd .neg{color:var(--red)}
+
+  .switch-view{display:flex;gap:6px;margin-bottom:14px}
+  .switch-view button{flex:1;padding:8px;border:1.5px solid var(--line);background:#fff;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-soft)}
+  .switch-view button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .actions{display:flex;gap:10px;margin-top:18px}
+  .btn{flex:1;padding:12px 16px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;border:1.5px solid}
+  .btn-primary{background:var(--teal);border-color:var(--teal);color:#fff}
+  .btn-primary:hover{background:var(--teal-deep);border-color:var(--teal-deep)}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--ink-soft)}
+  .btn-ghost:hover{border-color:var(--red);color:var(--red)}
+
+  footer{max-width:960px;margin:28px auto 0}
+  .cta-card{background:linear-gradient(135deg,var(--teal),var(--teal-deep));border-radius:16px;padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;box-shadow:var(--shadow)}
+  .cta-text{color:#fff;font-size:14px;line-height:1.5;max-width:52ch}
+  .cta-text b{display:block;font-size:16px;font-weight:800;margin-bottom:3px}
+  .cta-btns{display:flex;gap:10px;flex-wrap:wrap}
+  .cta-btn{padding:11px 18px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap;transition:transform .12s,opacity .12s}
+  .cta-btn:hover{transform:translateY(-1px);opacity:.94}
+  .cta-wa{background:#fff;color:var(--teal-deep)}
+  .cta-mail{background:rgba(255,255,255,.16);color:#fff;border:1.5px solid rgba(255,255,255,.4)}
+  .disc-line{font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.7;margin-top:18px;padding:0 8px}
+  .slabs-link{color:var(--teal-deep);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+  /* Print sheet — hidden on screen */
+  #printSheet{display:none}
+  #printSheet .ps-brand{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--teal);padding-bottom:8px;margin-bottom:16px}
+  #printSheet .ps-brand-logo{font-size:19px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+  #printSheet .ps-brand-logo span{color:var(--teal)}
+  #printSheet .ps-brand-tag{font-size:10px;color:var(--ink-soft)}
+  #printSheet .ps-title{text-align:center;margin-bottom:20px}
+  #printSheet .ps-title h1{font-size:20px;font-weight:800;letter-spacing:-.01em}
+  #printSheet .ps-title p{font-size:12px;color:var(--ink-soft);margin-top:3px}
+  #printSheet .ps-section{background:var(--teal-wash);border:1px solid var(--teal);color:var(--teal-deep);font-size:14px;font-weight:800;padding:9px 14px;border-radius:7px;margin:20px 0 0}
+  #printSheet .ps-sub-section{font-size:12.5px;font-weight:800;color:var(--ink);padding:12px 2px 4px;border-bottom:1.5px solid var(--line);margin-top:8px}
+  #printSheet .ps-section .ps-note-inline,#printSheet .ps-sub-section .ps-note-inline{font-weight:400;font-size:11px;color:var(--ink-soft)}
+  #printSheet .ps-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:2px}
+  #printSheet .ps-tbl td{padding:8px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  #printSheet .ps-tbl td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;width:130px}
+  #printSheet .ps-tbl tr.head td{background:#f4f8f5;font-weight:700}
+  #printSheet .ps-tbl tr.grand td{font-weight:800;font-size:14px;background:var(--teal-wash)}
+  #printSheet .ps-tbl tr.sub td:first-child{padding-left:28px;color:var(--ink-soft)}
+  #printSheet .ps-tbl tr.pos td:last-child{color:var(--green)}
+  /* comparison table: 3 columns */
+  #printSheet .ps-compare td{width:auto}
+  #printSheet .ps-compare td:first-child{width:auto}
+  #printSheet .ps-compare td:nth-child(2),#printSheet .ps-compare td:last-child{text-align:right;width:150px}
+  #printSheet .ps-compare tr.head td{text-align:right;font-weight:800}
+  #printSheet .ps-compare tr.head td:first-child{text-align:left}
+  #printSheet .ps-compare tr.winner td{background:var(--teal-wash);font-weight:800}
+  #printSheet .ps-compare tr.verdict-row td{font-weight:700;color:var(--teal-deep);border-bottom:none;padding-top:10px}
+  #printSheet .ps-compare td.win-tag{color:var(--teal-deep);font-weight:700}
+  #printSheet .ps-cta{margin-top:22px;padding:12px 14px;background:var(--teal-wash);border:1px solid var(--teal);border-radius:7px;font-size:12px;color:var(--teal-deep);line-height:1.6}
+  #printSheet .ps-cta b{display:block;font-size:13px}
+  #printSheet .ps-disc{margin-top:12px;padding:12px 14px;background:#f4f8f5;border:1px solid var(--line);border-radius:7px;font-size:10.5px;color:var(--ink-soft);line-height:1.6}
+
+  @media print{
+    body{background:#fff;padding:0}
+    .wrap,footer{display:none !important}
+    #printSheet{display:block;padding:30px 26px;color:#000}
+    #printSheet .ps-section,#printSheet .ps-tbl tr.grand,#printSheet .ps-compare tr.winner,#printSheet .ps-cta{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    #printSheet .ps-tbl tr{break-inside:avoid}
+    #printSheet .ps-section,#printSheet .ps-sub-section{break-after:avoid}
+    @page{margin:12mm}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/tools.html" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All tools</a>
+  <header>
+    <div class="brand">
+      <div class="brand-mark">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+        </span>
+        <span class="brand-words">
+          <span class="brand-logo">Clean<span class="brand-logo-accent">ITR</span></span>
+          <span class="brand-tag">TAX PLATFORM BY CHARTERED ACCOUNTANTS</span>
+        </span>
+      </div>
+      <span class="brand-badge">✓ Verified by CA</span>
+    </div>
+    <div class="eyebrow" id="yearEyebrow">FY 2025-26 · AY 2026-27</div>
+    <h1>Income Tax Calculator</h1>
+    <p class="sub">Enter your income once — we compute both regimes, apply standard deduction, rebate, surcharge and cess, and tell you which one saves more.</p>
+    <div class="year-tabs" id="yearTabs">
+      <button data-year="fy2526" class="on">
+        <span class="yt-main">FY 2025-26</span>
+        <span class="yt-sub">Income Tax Act 1961</span>
+      </button>
+      <button data-year="ty2627">
+        <span class="yt-main">TY 2026-27</span>
+        <span class="yt-sub">Income Tax Act 2025</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- ================= INPUT ================= -->
+    <div class="card card-pad">
+      <h2>Your details</h2>
+
+      <div class="row2">
+        <div class="field">
+          <label class="lab" for="taxName">Name <span class="hint">optional</span></label>
+          <input type="text" id="taxName" placeholder="Full name" autocomplete="name" style="width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff">
+        </div>
+        <div class="field">
+          <label class="lab" for="taxPan">PAN <span class="hint">optional</span></label>
+          <input type="text" id="taxPan" placeholder="ABCDE1234F" maxlength="10" style="width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;text-transform:uppercase;letter-spacing:.05em">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lab">Age group <span class="hint">affects old regime exemption</span></label>
+        <div class="toggle-grp" id="ageGrp">
+          <button data-age="below60" class="on">Below 60</button>
+          <button data-age="senior">60–80</button>
+          <button data-age="super">80+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lab" for="salary">Salary / Pension income <span class="hint">gross, before deductions</span></label>
+        <div class="input-money"><input type="number" id="salary" placeholder="0" min="0"></div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label class="lab" for="house">House property</label>
+          <div class="input-money"><input type="number" id="house" placeholder="0"></div>
+        </div>
+        <div class="field">
+          <label class="lab" for="other">Other sources <span class="hint">interest etc.</span></label>
+          <div class="input-money"><input type="number" id="other" placeholder="0" min="0"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lab" for="pgb">Business / profession (PGBP) <span class="hint">net profit after expenses</span></label>
+        <div class="input-money"><input type="number" id="pgb" placeholder="0"></div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label class="lab" for="cgShort">STCG (equity, 111A)</label>
+          <div class="input-money"><input type="number" id="cgShort" placeholder="0" min="0"></div>
+        </div>
+        <div class="field">
+          <label class="lab" for="cgLong">LTCG (equity, 112A)</label>
+          <div class="input-money"><input type="number" id="cgLong" placeholder="0" min="0"></div>
+        </div>
+      </div>
+      <div class="note">Capital gains are taxed at their own flat rates (STCG 20%, LTCG 12.5% above ₹1.25L) and are handled separately in both regimes. The 87A rebate does not apply to them.</div>
+
+      <!-- Deductions collapsible -->
+      <div class="collapse-head" id="dedHead">
+        <span style="font-weight:700;font-size:14px">Old-regime deductions</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span class="hint" style="font-size:12px;color:var(--ink-soft)" id="dedSum">₹0</span>
+          <span class="chev">▶</span>
+        </span>
+      </div>
+      <div class="collapse-body" id="dedBody">
+        <div class="note" style="background:var(--amber-wash);border-color:var(--amber)">These only reduce tax under the <b>old regime</b>. The new regime ignores them (except the standard deduction, which is applied automatically).</div>
+        <div class="field">
+          <label class="lab" for="d80c">80C <span class="hint">PF, ELSS, LIC · max ₹1.5L</span></label>
+          <div class="input-money"><input type="number" id="d80c" placeholder="0" min="0"></div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label class="lab" for="d80d">80D <span class="hint">health ins.</span></label>
+            <div class="input-money"><input type="number" id="d80d" placeholder="0" min="0"></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="dnps">80CCD(1B) <span class="hint">NPS · max ₹50k</span></label>
+            <div class="input-money"><input type="number" id="dnps" placeholder="0" min="0"></div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label class="lab" for="dhra">HRA exempt</label>
+            <div class="input-money"><input type="number" id="dhra" placeholder="0" min="0"></div>
+          </div>
+          <div class="field">
+            <label class="lab" for="dhome">Home loan int. <span class="hint">24(b) · max ₹2L</span></label>
+            <div class="input-money"><input type="number" id="dhome" placeholder="0" min="0"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="lab" for="dother">Other deductions <span class="hint">80G, 80E, 80TTA…</span></label>
+          <div class="input-money"><input type="number" id="dother" placeholder="0" min="0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= RESULTS ================= -->
+    <div class="card card-pad">
+      <h2>Your result</h2>
+
+      <div class="verdict" id="verdict">
+        <div class="small" id="vLabel">New regime is better</div>
+        <div class="big" id="vTax">₹0</div>
+        <div class="save" id="vSave">You save ₹0 vs the other regime</div>
+      </div>
+
+      <div class="compare">
+        <div class="regime new win" id="rNew">
+          <div class="rname"><span class="dot"></span> New regime</div>
+          <div class="rtax" id="newTax">₹0</div>
+          <div class="rmeta" id="newMeta">Default · std. deduction ₹75,000</div>
+        </div>
+        <div class="regime old" id="rOld">
+          <div class="rname"><span class="dot"></span> Old regime</div>
+          <div class="rtax" id="oldTax">₹0</div>
+          <div class="rmeta" id="oldMeta">Std. deduction ₹50,000</div>
+        </div>
+      </div>
+
+      <div class="switch-view" id="viewSwitch">
+        <button data-view="new" class="on">New breakdown</button>
+        <button data-view="old">Old breakdown</button>
+      </div>
+
+      <table class="bd" id="bdTable"><tbody id="bdBody"></tbody></table>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="btnExport">Export as PDF</button>
+        <button class="btn btn-ghost" id="btnReset">Reset all</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="cta-card">
+    <div class="cta-text">
+      <b>Tools give you a number — a CA gives you certainty.</b>
+      Want this return reviewed and filed by a Chartered Accountant? We're one message away.
+    </div>
+    <div class="cta-btns">
+      <a class="cta-btn cta-wa" href="https://wa.me/917838808704?text=Hi%20CleanITR%2C%20I%20used%20the%20tax%20calculator%20and%20want%20help%20filing%20my%20ITR" target="_blank" rel="noopener">WhatsApp us</a>
+      <a class="cta-btn cta-mail" href="mailto:info.cleanitr@gmail.com">Email documents</a>
+    </div>
+  </div>
+  <p class="disc-line">Calculations use verified FY 2025-26 / TY 2026-27 slabs including standard deduction, rebate, surcharge, marginal relief and 4% cess. This is a free tool for guidance only and does not constitute professional advice — for exact computation and filing, consult our CAs. © 2026 Clean ITR · Tax Platform by Chartered Accountants.</p>
+</footer>
+
+<!-- ============ PRINT-ONLY STATEMENT ============ -->
+<div id="printSheet" aria-hidden="true">
+  <div class="ps-brand">
+    <div class="ps-brand-logo">Clean<span>ITR</span></div>
+    <div class="ps-brand-tag">Tax Platform by Chartered Accountants · cleanitr.netlify.app</div>
+  </div>
+  <div class="ps-title">
+    <h1>Income Tax Computation Statement</h1>
+    <p id="psActName">Income Tax Act, 1961 · Government of India</p>
+  </div>
+
+  <div class="ps-section">Basic Information</div>
+  <table class="ps-tbl" id="psBasic"></table>
+
+  <div class="ps-section">Regime Comparison</div>
+  <table class="ps-tbl ps-compare" id="psCompare"></table>
+
+  <div class="ps-section" id="psRecHead">Detailed Computation — Recommended Regime</div>
+
+  <div class="ps-sub-section">Income Details</div>
+  <table class="ps-tbl" id="psIncome"></table>
+
+  <div class="ps-sub-section">Deduction Details <span class="ps-note-inline" id="psDedNote"></span></div>
+  <table class="ps-tbl" id="psDed"></table>
+
+  <div class="ps-sub-section">Tax Computation</div>
+  <table class="ps-tbl" id="psTax"></table>
+
+  <div class="ps-cta">
+    <b>Get this verified by a Chartered Accountant.</b> WhatsApp +91 78388 08704 or email info.cleanitr@gmail.com — reviewed, cross-checked and filed on time.
+  </div>
+  <div class="ps-disc">
+    <b>Disclaimer:</b> This computation is for guidance only and does not purport to give the correct income and tax calculation in all circumstances. For filing of returns, the exact calculation may be made as per the provisions of the relevant Acts and Rules. © 2026 Clean ITR.
+  </div>
+</div>
+
+<script>
+/* Section reference labels differ between the two Acts */
+const REFS = {
+  fy2526: {
+    actName:'Income Tax Act, 1961',
+    yearLabel:'Financial Year 2025-26 · Assessment Year 2026-27',
+    stdDed:'Standard Deduction u/s 16(ia)',
+    rebate:'Rebate u/s 87A',
+    sec80c:'Deduction u/s 80C',
+    sec80d:'Deduction u/s 80D',
+    secNps:'Deduction u/s 80CCD(1B)',
+    hra:'HRA Exemption u/s 10(13A)',
+    homeInt:'Interest on housing loan u/s 24(b)',
+    otherDed:'Other Chapter VI-A deductions',
+    cess:'Health &amp; Education Cess @ 4%'
+  },
+  ty2627: {
+    actName:'Income Tax Act, 2025',
+    yearLabel:'Tax Year 2026-27',
+    stdDed:'Standard Deduction u/s 19(1)',
+    rebate:'Rebate u/s 156',
+    sec80c:'Deduction u/s 123 (Schedule XV)',
+    sec80d:'Deduction u/s 126 (MediClaim)',
+    secNps:'Deduction u/s 124(3) (NPS)',
+    hra:'House Rent Allowance exemption',
+    homeInt:'Interest on housing loan u/s 130',
+    otherDed:'Other deductions (u/s 129/133 etc.)',
+    cess:'Health &amp; Education Cess @ 4%'
+  }
+};
+
+/* ---------- State ---------- */
+const S = { age:'below60', view:'new', year:'fy2526' };
+const num = id => Math.max(0, +document.getElementById(id).value || 0);
+const fmt = n => '₹' + Math.round(n).toLocaleString('en-IN');
+
+/* ---------- Slab engines ---------- */
+// tax on a base amount given slab array [{upto, rate}]
+function slabTax(income, slabs){
+  let tax=0, prev=0;
+  for(const s of slabs){
+    if(income > prev){
+      const band = Math.min(income, s.upto) - prev;
+      tax += band * s.rate;
+      prev = s.upto;
+    } else break;
+  }
+  return tax;
+}
+const NEW_SLABS = [
+  {upto:400000,rate:0},{upto:800000,rate:.05},{upto:1200000,rate:.10},
+  {upto:1600000,rate:.15},{upto:2000000,rate:.20},{upto:2400000,rate:.25},
+  {upto:Infinity,rate:.30}
+];
+function oldSlabs(age){
+  let exempt = 250000;
+  if(age==='senior') exempt=300000;
+  if(age==='super')  exempt=500000;
+  return [
+    {upto:exempt,rate:0},{upto:500000,rate:.05},
+    {upto:1000000,rate:.20},{upto:Infinity,rate:.30}
+  ].filter((s,i,a)=> i===0 || s.upto>a[i-1].upto); // drop collapsed band for super senior
+}
+
+/* ---------- Surcharge ---------- */
+function surcharge(taxBeforeCess, totalIncome, regime){
+  let rate=0;
+  if(totalIncome>50000000) rate=.37;
+  else if(totalIncome>20000000) rate=.25;
+  else if(totalIncome>10000000) rate=.15;
+  else if(totalIncome>5000000) rate=.10;
+  if(regime==='new' && rate>.25) rate=.25; // capped at 25% in new regime
+  return taxBeforeCess*rate;
+}
+
+/* ---------- Capital gains tax (same both regimes) ---------- */
+function cgTax(stcg, ltcg){
+  const ltTaxable = Math.max(0, ltcg - 125000); // ₹1.25L exemption
+  return { stcg: stcg*0.20, ltcg: ltTaxable*0.125,
+           total: stcg*0.20 + ltTaxable*0.125 };
+}
+
+/* ---------- Core compute for one regime ---------- */
+function compute(regime){
+  const salary=num('salary'), house=num('house'), other=num('other');
+  const pgb=+document.getElementById('pgb').value || 0; // can be negative (loss)
+  const stcg=num('cgShort'), ltcg=num('cgLong');
+  const cg = cgTax(stcg, ltcg);
+
+  const stdDed = regime==='new' ? 75000 : 50000;
+  const salaryAfterStd = Math.max(0, salary - stdDed);
+
+  // deductions (old only)
+  let ded = 0;
+  if(regime==='old'){
+    ded = Math.min(150000,num('d80c')) + num('d80d') + Math.min(50000,num('dnps'))
+        + num('dhra') + Math.min(200000,num('dhome')) + num('dother');
+  }
+  // ordinary (slab) taxable income — excludes capital gains, includes PGB
+  const ordinary = Math.max(0, salaryAfterStd + house + other + pgb - ded);
+
+  const slabs = regime==='new' ? NEW_SLABS : oldSlabs(S.age);
+  let slabBase = slabTax(ordinary, slabs);
+
+  // ---- 87A rebate (on ordinary income only) ----
+  let rebate=0, marginalNote='';
+  if(regime==='new'){
+    if(ordinary<=1200000){ rebate=Math.min(slabBase,60000); }
+    else {
+      // marginal relief: tax shouldn't exceed income above 12L
+      const excess = ordinary-1200000;
+      if(slabBase>excess){ rebate=slabBase-excess; marginalNote='marginal relief'; }
+    }
+  } else {
+    if(ordinary<=500000) rebate=Math.min(slabBase,12500);
+  }
+  const ordAfterRebate = slabBase - rebate;
+
+  // ---- add capital gains tax (no rebate on these) ----
+  const taxBeforeSur = ordAfterRebate + cg.total;
+  const totalIncome = ordinary + stcg + Math.max(0,ltcg-125000); // ordinary already includes PGB
+  const sur = surcharge(taxBeforeSur, totalIncome, regime);
+  const cess = (taxBeforeSur + sur)*0.04;
+  const total = taxBeforeSur + sur + cess;
+
+  return { regime, stdDed, ded, ordinary, slabBase, rebate, marginalNote,
+           cg, sur, cess, total, taxBeforeSur, ordAfterRebate,
+           raw:{ salary, house, other, pgb, stcg, ltcg,
+                 d80c:Math.min(150000,num('d80c')), d80d:num('d80d'),
+                 dnps:Math.min(50000,num('dnps')), dhra:num('dhra'),
+                 dhome:Math.min(200000,num('dhome')), dother:num('dother') },
+           lines:[
+             ['Salary / pension', salary, false],
+             salary>0?['− Standard deduction', -stdDed, false]:null,
+             ['House property', house, false],
+             ['Other sources', other, false],
+             pgb!==0?['Business / profession', pgb, false]:null,
+             (regime==='old'&&ded>0)?['− Deductions (80C etc.)', -ded, false]:null,
+             ['Taxable income (slab)', ordinary, 'sub'],
+             ['Tax as per slabs', slabBase, false],
+             rebate>0?['− Rebate'+(marginalNote?' ('+marginalNote+')':''), -rebate, 'pos']:null,
+             cg.total>0?['+ Capital gains tax', cg.total, false]:null,
+             sur>0?['+ Surcharge', sur, false]:null,
+             ['+ Health & Education cess (4%)', cess, false],
+           ].filter(Boolean)
+         };
+}
+
+/* ---------- Render ---------- */
+function render(){
+  const n=compute('new'), o=compute('old');
+  const newBetter = n.total <= o.total;
+
+  document.getElementById('newTax').textContent=fmt(n.total);
+  document.getElementById('oldTax').textContent=fmt(o.total);
+  document.getElementById('newMeta').textContent = n.rebate>0 && n.ordinary<=1200000 ?
+     'Std. deduction ₹75,000 · rebate applied' : 'Default · std. deduction ₹75,000';
+  document.getElementById('oldMeta').textContent =
+     'Std. deduction ₹50,000' + (o.ded>0?' · '+fmt(o.ded)+' deductions':'');
+
+  const rNew=document.getElementById('rNew'), rOld=document.getElementById('rOld');
+  rNew.classList.toggle('win',newBetter); rOld.classList.toggle('win',!newBetter);
+  rNew.querySelector('.badge')?.remove(); rOld.querySelector('.badge')?.remove();
+  const badge=document.createElement('div'); badge.className='badge'; badge.textContent='Best';
+  (newBetter?rNew:rOld).appendChild(badge);
+
+  // verdict
+  const win = newBetter?n:o, lose=newBetter?o:n;
+  const saving = lose.total - win.total;
+  document.getElementById('vLabel').textContent=(newBetter?'New':'Old')+' regime is better';
+  document.getElementById('vTax').textContent=fmt(win.total);
+  document.getElementById('vSave').textContent = saving>0
+     ? 'You save '+fmt(saving)+' vs the '+(newBetter?'old':'new')+' regime'
+     : 'Both regimes cost the same for you';
+
+  // breakdown table
+  const data = S.view==='new'?n:o;
+  const body=document.getElementById('bdBody');
+  body.innerHTML='<tr><th>'+(S.view==='new'?'New':'Old')+' regime</th><th>Amount</th></tr>';
+  data.lines.forEach(([label,val,cls])=>{
+    const tr=document.createElement('tr');
+    if(cls==='sub') tr.className='sub';
+    const c = cls==='pos'?'pos':(val<0&&cls!=='sub'?'':'');
+    tr.innerHTML='<td>'+label+'</td><td class="'+(cls==='pos'?'pos':'')+'">'+fmt(val)+'</td>';
+    body.appendChild(tr);
+  });
+  const tr=document.createElement('tr'); tr.className='total';
+  tr.innerHTML='<td>Total tax payable</td><td>'+fmt(data.total)+'</td>';
+  body.appendChild(tr);
+
+  // stash for PDF export
+  S.last = { n, o, newBetter, saving };
+}
+
+/* ---------- Events ---------- */
+document.querySelectorAll('#ageGrp button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#ageGrp button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); S.age=b.dataset.age; render();
+});
+document.querySelectorAll('#viewSwitch button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#viewSwitch button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); S.view=b.dataset.view; render();
+});
+const dedHead=document.getElementById('dedHead'), dedBody=document.getElementById('dedBody');
+dedHead.onclick=()=>{dedHead.classList.toggle('open');dedBody.classList.toggle('open');};
+document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('input',()=>{
+  const dsum=Math.min(150000,num('d80c'))+num('d80d')+Math.min(50000,num('dnps'))+num('dhra')+Math.min(200000,num('dhome'))+num('dother');
+  document.getElementById('dedSum').textContent=fmt(dsum);
+  render();
+}));
+
+/* ---------- Year selector ---------- */
+document.querySelectorAll('#yearTabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#yearTabs button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); S.year=b.dataset.year;
+  document.getElementById('yearEyebrow').textContent =
+    S.year==='fy2526' ? 'FY 2025-26 · AY 2026-27' : 'Tax Year 2026-27 · Income Tax Act 2025';
+  render();
+});
+
+/* ---------- Reset ---------- */
+document.getElementById('btnReset').onclick=()=>{
+  if(!confirm('Clear all entered details and start over?')) return;
+  document.querySelectorAll('input').forEach(i=>i.value='');
+  document.querySelectorAll('#ageGrp button').forEach((x,i)=>x.classList.toggle('on',i===0));
+  S.age='below60';
+  document.getElementById('dedSum').textContent='₹0';
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+/* ---------- Export as PDF: official detailed statement ---------- */
+function row(label, val, cls){
+  return '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+label+'</td><td>'+
+    (val===''?'':fmt(val))+'</td></tr>';
+}
+document.getElementById('btnExport').onclick=()=>{
+  const {n,o,newBetter}=S.last;
+  const win = newBetter?n:o;               // the recommended regime
+  const R = REFS[S.year];
+  const name=document.getElementById('taxName').value.trim();
+  const pan=document.getElementById('taxPan').value.trim().toUpperCase();
+  const rw = win.raw;
+  const today=new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  // Act name subtitle
+  document.getElementById('psActName').innerHTML = R.actName+' · '+R.yearLabel;
+  document.getElementById('psRecHead').textContent =
+    'Detailed Computation — '+(newBetter?'New':'Old')+' Regime (Recommended)';
+
+  // --- Basic Information ---
+  document.getElementById('psBasic').innerHTML = [
+    ['PAN', pan||'—'],
+    ['Name of the Taxpayer', name||'—'],
+    ['Applicable Act', R.actName],
+    ['Recommended Tax Regime', newBetter?'New Tax Regime':'Old Tax Regime'],
+    [S.year==='fy2526'?'Assessment Year':'Tax Year', R.yearLabel],
+    ['Taxpayer Category', 'Individual'],
+    ['Residential Status', 'Resident'],
+    ['Age Category', S.age==='below60'?'Below 60 years (Regular Citizen)':S.age==='senior'?'60–80 years (Senior Citizen)':'80+ years (Super Senior)'],
+    ['Date of Computation', today]
+  ].map(([k,v])=>'<tr><td>'+k+'</td><td>'+v+'</td></tr>').join('');
+
+  // --- Regime Comparison (both side by side) ---
+  const saving = Math.abs(n.total - o.total);
+  const cmp = (label, nv, ov, cls) =>
+    '<tr'+(cls?' class="'+cls+'"':'')+'><td>'+label+'</td><td>'+fmt(nv)+'</td><td>'+fmt(ov)+'</td></tr>';
+  let comp='';
+  comp+='<tr class="head"><td>Particulars</td><td>New Regime</td><td>Old Regime</td></tr>';
+  comp+=cmp('Taxable income (slab)', n.ordinary, o.ordinary);
+  comp+=cmp('Tax as per slabs', n.slabBase, o.slabBase);
+  if(n.rebate>0||o.rebate>0) comp+=cmp('Less: Rebate', n.rebate, o.rebate, 'pos');
+  if(n.cg.total>0||o.cg.total>0) comp+=cmp('Add: Capital gains tax', n.cg.total, o.cg.total);
+  if(n.sur>0||o.sur>0) comp+=cmp('Add: Surcharge', n.sur, o.sur);
+  comp+=cmp('Add: Health & Education cess', n.cess, o.cess);
+  comp+='<tr class="winner"><td>Total Tax Payable</td><td>'+fmt(n.total)+
+        (newBetter?' ✓':'')+'</td><td>'+fmt(o.total)+(!newBetter?' ✓':'')+'</td></tr>';
+  if(saving>0){
+    comp+='<tr class="verdict-row"><td>Recommendation</td><td colspan="2" style="text-align:right">'+
+          (newBetter?'New':'Old')+' regime saves '+fmt(saving)+'</td></tr>';
+  } else {
+    comp+='<tr class="verdict-row"><td>Recommendation</td><td colspan="2" style="text-align:right">Both regimes result in the same tax</td></tr>';
+  }
+  document.getElementById('psCompare').innerHTML = comp;
+
+  // --- Income Details ---
+  let inc='';
+  inc+=row('Income under the head Salaries', Math.max(0,rw.salary-win.stdDed), 'head');
+  inc+=row('Gross Salary / Pension', rw.salary, 'sub');
+  inc+=row('Less: '+R.stdDed, win.stdDed, 'sub');
+  inc+=row('Income under the head House Property', rw.house, 'head');
+  inc+=row('Income under Business or Profession (PGBP)', rw.pgb, 'head');
+  const cgTotal = win.cg.total>0 ? (rw.stcg + Math.max(0,rw.ltcg-125000)) : 0;
+  inc+=row('Income under the head Capital Gains', rw.stcg + Math.max(0,rw.ltcg), 'head');
+  if(rw.stcg>0) inc+=row('Short Term Capital Gains (taxable @20%)', rw.stcg, 'sub');
+  if(rw.ltcg>0) inc+=row('Long Term Capital Gains (taxable @12.5%)', rw.ltcg, 'sub');
+  inc+=row('Income under the head Other Sources', rw.other, 'head');
+  inc+=row('Gross Total Income', win.ordinary + rw.stcg + Math.max(0,rw.ltcg), 'grand');
+  document.getElementById('psIncome').innerHTML = inc;
+
+  // --- Deduction Details ---
+  const dnote = document.getElementById('psDedNote');
+  if(newBetter){
+    dnote.textContent = '(New regime — only standard deduction allowed; other deductions not applicable)';
+    document.getElementById('psDed').innerHTML =
+      row(R.stdDed, win.stdDed, 'head') +
+      row('Total Deductions', win.stdDed, 'grand');
+  } else {
+    dnote.textContent = '(Old regime)';
+    let d='';
+    d+=row(R.sec80c, rw.d80c, '');
+    d+=row(R.sec80d, rw.d80d, '');
+    d+=row(R.secNps, rw.dnps, '');
+    d+=row(R.hra, rw.dhra, '');
+    d+=row(R.homeInt, rw.dhome, '');
+    d+=row(R.otherDed, rw.dother, '');
+    d+=row('Total Deductions', win.ded, 'grand');
+    document.getElementById('psDed').innerHTML = d;
+  }
+
+  // --- Tax Computation ---
+  let t='';
+  t+=row('Total Taxable Income', win.ordinary + rw.stcg + Math.max(0,rw.ltcg-125000), 'head');
+  t+=row('Tax at Normal Rates (slabs)', win.slabBase, '');
+  if(win.cg.total>0) t+=row('Tax at Special Rates (Capital Gains)', win.cg.total, '');
+  t+=row('Total Tax before Rebate', win.slabBase + win.cg.total, '');
+  if(win.rebate>0) t+=row('Less: '+R.rebate+(win.marginalNote?' (marginal relief)':''), win.rebate, 'pos');
+  t+=row('Net Tax after Rebate', win.taxBeforeSur, '');
+  t+=row('Add: Surcharge', win.sur, '');
+  t+=row('Add: '+R.cess, win.cess, '');
+  t+=row('Total Tax on Income', win.total, 'grand');
+  document.getElementById('psTax').innerHTML = t;
+
+  window.print();
+};
+
+render();
+</script>
+</body>
+</html>
