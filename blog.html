@@ -6,7 +6,7 @@
 <meta name="description" content="Tax made simple — practical ITR, GST, TDS and compliance guides written by the Chartered Accountants at CleanITR.">
 <title>Blog — Tax Guides by CAs | CleanITR</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230e7c66'/%3E%3Cpath d='M18 8l-7.5 8L6 12' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="canonical" href="https://cleanitr.netlify.app/blog.html">
+<link rel="canonical" href="https://cleanitr.com/blog.html">
 <meta property="og:title" content="CleanITR Blog — Tax Guides by CAs">
 <meta property="og:description" content="Practical ITR, GST, TDS and compliance guides written by Chartered Accountants.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -379,7 +379,7 @@ async function exportPDF(slug){
       // ----- Branded footer -----
       pdf.setDrawColor(220,224,224);pdf.line(marginX,pageH-footerH,pageW-marginX,pageH-footerH);
       pdf.setTextColor(120,130,132);pdf.setFontSize(8);
-      pdf.text('© 2026 CleanITR · cleanitr.netlify.app · info.cleanitr@gmail.com',marginX,pageH-16);
+      pdf.text('© 2026 CleanITR · cleanitr.com · info.cleanitr@gmail.com',marginX,pageH-16);
       pdf.text(`Page ${i+1} of ${totalPages}`,pageW-marginX,pageH-16,{align:'right'});
     }
     const fname=(slug||'cleanitr-article').replace(/[^a-z0-9\-]+/gi,'-').slice(0,60);
