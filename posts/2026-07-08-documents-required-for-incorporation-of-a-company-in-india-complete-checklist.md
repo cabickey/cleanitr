@@ -1,13 +1,14 @@
 ---
-title: "Documents & Details Required for Incorporation of a Company in India: Complete Checklist (2026)"
+title: "Documents & Details Required for Incorporation of a Company in India:
+  Complete Checklist (2026)"
 category: Corporate Compliance
 readtime: 8 min read
 date: 2026-07-08T10:00:00.000+05:30
-image: /images/uploads/company-incorporation-doc.png
+image: /images/uploads/company-incorporation-checklist.png
 summary: A ready-to-use checklist of every detail and document required to
-  incorporate a company in India — for the company, Indian directors and
-  foreign directors — with accepted file formats (PDF/JPG) and size limits for
-  each document.
+  incorporate a company in India — for the company, Indian directors and foreign
+  directors — with accepted file formats (PDF/JPG) and size limits for each
+  document.
 ---
 Incorporating a company in India is done entirely online through the **MCA V3 portal** using the **SPICe+** web form. The process itself is straightforward — the single most common reason incorporations get delayed is incomplete or mismatched paperwork. This guide gives you the complete checklist of every detail and document you need **before** you start: relating to the **company**, to **directors who are Indian nationals**, and to **directors who are foreign nationals** — along with the accepted file format and size for each document.
 
