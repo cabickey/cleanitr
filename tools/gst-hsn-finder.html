@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GST Rate & HSN/SAC Finder — CleanITR</title>
+<meta name="description" content="Free GST rate & HSN/SAC code finder — search any product or service, see the latest GST 2.0 rates (effective 22 Sept 2025), filter by slab, and view related codes. Built by CleanITR.">
+<style>
+  :root{
+    --ink:#0f2233;          /* deep slate/navy — CleanITR headings */
+    --ink-soft:#33475b;
+    --muted:#5c6b7a;
+    --line:#e3e8ee;
+    --line-soft:#eef2f6;
+    --bg:#f6f8fa;
+    --card:#ffffff;
+    --accent:#0e7c66;       /* fresh CA green */
+    --accent-dark:#0a6152;
+    --accent-soft:#e6f4f0;
+    --blue:#1f6feb;
+    --blue-soft:#e8f1fe;
+    --amber:#b7791f;
+    --amber-soft:#fdf5e6;
+    --shadow:0 1px 2px rgba(15,34,51,.04),0 8px 24px rgba(15,34,51,.06);
+    --shadow-sm:0 1px 2px rgba(15,34,51,.05);
+    --radius:16px;
+    --radius-sm:10px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font);
+    color:var(--ink-soft);
+    background:var(--bg);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    background:var(--card);
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:40;
+  }
+  .topbar-inner{
+    max-width:1080px;margin:0 auto;padding:14px 20px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .brand-mark{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+    color:#fff;font-weight:800;font-size:16px;
+    display:grid;place-items:center;letter-spacing:-.5px;
+  }
+  .brand-name{font-weight:800;font-size:17px;letter-spacing:-.3px;line-height:1.1}
+  .brand-tag{font-size:11px;color:var(--muted);font-weight:500}
+  .topbar-link{font-size:14px;color:var(--ink-soft);font-weight:600}
+
+  /* ---------- Hero ---------- */
+  .hero{max-width:1080px;margin:0 auto;padding:38px 20px 8px}
+  .pill{
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--accent-soft);color:var(--accent-dark);
+    font-size:12.5px;font-weight:700;padding:6px 13px;border-radius:999px;
+    letter-spacing:.2px;
+  }
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  h1{
+    color:var(--ink);font-size:34px;line-height:1.15;letter-spacing:-.8px;
+    margin:16px 0 10px;font-weight:800;max-width:20ch;
+  }
+  .hero p.lead{font-size:16px;color:var(--muted);max-width:60ch}
+  .updated-note{
+    margin-top:14px;font-size:13px;color:var(--amber);
+    background:var(--amber-soft);display:inline-flex;gap:7px;align-items:center;
+    padding:7px 13px;border-radius:8px;font-weight:600;
+  }
+
+  /* ---------- Search panel ---------- */
+  .panel{
+    max-width:1080px;margin:24px auto 0;padding:0 20px;
+  }
+  .search-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px;
+  }
+  .search-row{position:relative}
+  .search-input{
+    width:100%;font-size:16px;font-family:var(--font);color:var(--ink);
+    border:1.5px solid var(--line);border-radius:12px;
+    padding:15px 16px 15px 46px;background:#fff;transition:border-color .15s,box-shadow .15s;
+  }
+  .search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .search-input::placeholder{color:#9aa7b4}
+  .search-icon{
+    position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    color:#9aa7b4;pointer-events:none;
+  }
+  .clear-btn{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    border:none;background:var(--line-soft);color:var(--muted);
+    width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:15px;
+    display:none;place-items:center;
+  }
+  .clear-btn:hover{background:var(--line);color:var(--ink)}
+
+  .filters{margin-top:16px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end}
+  .filter-group{display:flex;flex-direction:column;gap:8px}
+  .filter-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);
+    font-size:13.5px;font-weight:600;font-family:var(--font);
+    padding:8px 14px;border-radius:999px;cursor:pointer;transition:all .12s;
+  }
+  .chip:hover{border-color:var(--accent);color:var(--accent-dark)}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip.type-chip.active{background:var(--ink);border-color:var(--ink)}
+
+  /* ---------- Results ---------- */
+  .results-wrap{max-width:1080px;margin:22px auto 0;padding:0 20px}
+  .results-meta{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    margin-bottom:14px;flex-wrap:wrap;
+  }
+  .results-count{font-size:14px;color:var(--muted);font-weight:600}
+  .results-count b{color:var(--ink)}
+
+  .card-grid{display:grid;gap:12px}
+  .result-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:16px 18px;box-shadow:var(--shadow-sm);transition:border-color .12s,box-shadow .12s;
+  }
+  .result-card:hover{border-color:#cfd9e2;box-shadow:var(--shadow)}
+  .rc-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+  .rc-left{min-width:0}
+  .rc-code-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+  .rc-code{
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:15px;font-weight:700;color:var(--ink);letter-spacing:.3px;
+  }
+  .rc-badge{
+    font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:5px;
+    text-transform:uppercase;letter-spacing:.5px;
+  }
+  .rc-badge.hsn{background:var(--blue-soft);color:var(--blue)}
+  .rc-badge.sac{background:var(--accent-soft);color:var(--accent-dark)}
+  .rc-desc{font-size:14.5px;color:var(--ink-soft);line-height:1.45}
+  .rc-cat{font-size:12px;color:var(--muted);margin-top:6px;font-weight:500}
+  .rc-cat span{color:var(--ink-soft);font-weight:600}
+
+  .rate-box{text-align:right;flex-shrink:0}
+  .rate-val{
+    font-size:24px;font-weight:800;line-height:1;letter-spacing:-.5px;
+    display:inline-flex;align-items:baseline;gap:1px;
+  }
+  .rate-val small{font-size:14px;font-weight:700}
+  .rate-r0{color:#2a9d5c}
+  .rate-r5{color:var(--accent)}
+  .rate-r12{color:#c77d17}
+  .rate-r18{color:var(--blue)}
+  .rate-r28{color:#b23b3b}
+  .rate-r40{color:#9a2b2b}
+  .rate-r3,.rate-r1_5,.rate-r0_25{color:var(--ink-soft)}
+  .rate-lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
+  .rate-old{font-size:11.5px;color:#a4adb6;margin-top:3px}
+  .rate-old s{color:#b23b3b;opacity:.75}
+
+  .split-note{
+    margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);
+    font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 16px;
+  }
+  .split-note b{color:var(--ink-soft);font-weight:700}
+
+  /* ---------- Related ---------- */
+  .related{margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft)}
+  .related-title{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .related-chips{display:flex;flex-wrap:wrap;gap:7px}
+  .related-chip{
+    border:1px solid var(--line);background:#fbfcfd;border-radius:8px;
+    padding:6px 10px;cursor:pointer;font-size:12.5px;transition:all .12s;
+    display:flex;align-items:center;gap:7px;
+  }
+  .related-chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .related-chip code{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-weight:700;color:var(--ink)}
+  .related-chip .rr{font-weight:700;font-size:11.5px}
+  .related-chip .rt{color:var(--muted);max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---------- Empty / prompt ---------- */
+  .empty{
+    background:var(--card);border:1px dashed var(--line);border-radius:var(--radius-sm);
+    padding:44px 24px;text-align:center;
+  }
+  .empty h3{color:var(--ink);font-size:17px;margin-bottom:6px;font-weight:700}
+  .empty p{color:var(--muted);font-size:14px;max-width:44ch;margin:0 auto 16px}
+  .suggest-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .suggest-chip{
+    border:1px solid var(--line);background:#fbfcfd;border-radius:999px;
+    padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink-soft);transition:all .12s;
+  }
+  .suggest-chip:hover{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-soft)}
+
+  /* ---------- Info strip ---------- */
+  .info-strip{max-width:1080px;margin:34px auto 0;padding:0 20px}
+  .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .info-item{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:16px 18px;
+  }
+  .info-item h4{color:var(--ink);font-size:14px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+  .info-item p{font-size:13px;color:var(--muted);line-height:1.5}
+
+  /* ---------- CTA / footer ---------- */
+  .cta{
+    max-width:1080px;margin:34px auto 0;padding:0 20px;
+  }
+  .cta-inner{
+    background:linear-gradient(135deg,var(--ink),#173049);
+    border-radius:var(--radius);padding:28px 30px;color:#fff;
+    display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;
+  }
+  .cta-inner h3{font-size:19px;font-weight:800;letter-spacing:-.3px;margin-bottom:5px}
+  .cta-inner p{font-size:14px;color:#c3d0dc;max-width:52ch}
+  .cta-btn{
+    background:var(--accent);color:#fff;font-weight:700;font-size:14.5px;
+    padding:12px 22px;border-radius:10px;white-space:nowrap;
+  }
+  .cta-btn:hover{background:var(--accent-dark);text-decoration:none}
+
+  footer{
+    max-width:1080px;margin:30px auto 0;padding:22px 20px 40px;
+    border-top:1px solid var(--line);
+  }
+  footer .disclaimer{font-size:12px;color:var(--muted);line-height:1.55;max-width:75ch}
+  footer .copy{font-size:12.5px;color:var(--ink-soft);font-weight:600;margin-top:8px}
+
+  /* ---------- Responsive ---------- */
+  @media(max-width:720px){
+    h1{font-size:27px}
+    .info-grid{grid-template-columns:1fr}
+    .rc-top{flex-direction:column;gap:10px}
+    .rate-box{text-align:left;display:flex;align-items:baseline;gap:10px}
+    .rate-lbl,.rate-old{margin-top:0}
+    .cta-inner{flex-direction:column;align-items:flex-start}
+    .topbar-tag{display:none}
+  }
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="https://cleanitr.com/">
+        <span class="brand-mark">C</span>
+        <span>
+          <span class="brand-name">CleanITR</span><br>
+          <span class="brand-tag topbar-tag">Tax Platform by Chartered Accountants</span>
+        </span>
+      </a>
+      <a class="topbar-link" href="https://cleanitr.com/tools">All tools →</a>
+    </div>
+  </div>
+
+  <section class="hero">
+    <span class="pill"><span class="dot"></span>Free tool · GST 2.0</span>
+    <h1>GST Rate &amp; HSN/SAC Finder</h1>
+    <p class="lead">Search any product or service to find its HSN/SAC code and current GST rate — with the CGST + SGST split and closely related codes shown alongside. Updated for the GST 2.0 rates in force today.</p>
+    <span class="updated-note">⚑ Rates reflect GST 2.0, effective 22 September 2025 (56th GST Council)</span>
+  </section>
+
+  <div class="panel">
+    <div class="search-card">
+      <div class="search-row">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" class="search-input" type="text" autocomplete="off" spellcheck="false" placeholder="Search by product, service, or HSN/SAC code — e.g. paneer, mobile phone, 8517, salon…">
+        <button id="clear" class="clear-btn" aria-label="Clear search">✕</button>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <span class="filter-label">Type</span>
+          <div class="chips" id="type-chips">
+            <button class="chip type-chip active" data-type="all">All</button>
+            <button class="chip type-chip" data-type="hsn">Goods (HSN)</button>
+            <button class="chip type-chip" data-type="sac">Services (SAC)</button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">GST rate</span>
+          <div class="chips" id="rate-chips">
+            <button class="chip rate-chip active" data-rate="all">All</button>
+            <button class="chip rate-chip" data-rate="0">0%</button>
+            <button class="chip rate-chip" data-rate="5">5%</button>
+            <button class="chip rate-chip" data-rate="18">18%</button>
+            <button class="chip rate-chip" data-rate="40">40%</button>
+            <button class="chip rate-chip" data-rate="other">3% / 1.5% / 0.25%</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-wrap">
+    <div class="results-meta">
+      <span class="results-count" id="count"></span>
+    </div>
+    <div class="card-grid" id="results"></div>
+  </div>
+
+  <div class="info-strip">
+    <div class="info-grid">
+      <div class="info-item">
+        <h4>🔎 How to read a code</h4>
+        <p>HSN codes classify <b>goods</b> (e.g. 0406 = cheese &amp; paneer). SAC codes classify <b>services</b> and always begin with 99 (e.g. 9963 = hotel accommodation).</p>
+      </div>
+      <div class="info-item">
+        <h4>📋 How many digits to quote</h4>
+        <p>Turnover up to ₹5 cr: 4-digit HSN on B2B invoices. Above ₹5 cr: 6-digit HSN on all invoices. SAC must be shown for all taxable services.</p>
+      </div>
+      <div class="info-item">
+        <h4>➗ CGST + SGST split</h4>
+        <p>For supply within a state, GST splits equally into CGST + SGST. For inter-state supply, the full rate is charged as IGST.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div class="cta-inner">
+      <div>
+        <h3>Not sure which code applies to your product?</h3>
+        <p>Classification errors lead to wrong tax, mismatched ITC and notices. Our Chartered Accountants will confirm the right HSN/SAC and rate for your business.</p>
+      </div>
+      <a class="cta-btn" href="https://wa.me/917838808704?text=Hi%20CleanITR%2C%20I%20need%20help%20with%20HSN%2FSAC%20classification%20and%20GST%20rate">Ask a CA</a>
+    </div>
+  </div>
+
+  <footer>
+    <p class="disclaimer">
+      Rates shown reflect the GST 2.0 structure notified after the 56th GST Council meeting, effective 22 September 2025 (tobacco &amp; certain products transition separately). This finder covers commonly-searched items and is for general guidance only — it is not a complete rate schedule and does not constitute professional advice. GST is product- and classification-specific; always verify the exact HSN/SAC against the official
+      <a href="https://services.gst.gov.in/services/searchhsnsac" target="_blank" rel="noopener">GST portal</a>
+      or consult our team before relying on it for invoicing or filing.
+    </p>
+    <p class="copy">© 2026 Clean ITR · Tax Platform by Chartered Accountants.</p>
+  </footer>
+
+<script>
+/* ============ GST 2.0 DATASET (effective 22 Sept 2025) ============
+   Fields: code, type (hsn|sac), desc, rate (number), oldRate (number|null),
+   cat (category), kw (extra search keywords)
+   Rates verified against 56th GST Council / Notification 9/2025 sources. */
+const DATA = [
+  /* ---------- FOOD & DAIRY ---------- */
+  {code:"0401",type:"hsn",desc:"Fresh/UHT milk (not concentrated, no added sugar)",rate:0,oldRate:5,cat:"Dairy & food",kw:"milk uht toned dudh"},
+  {code:"0402",type:"hsn",desc:"Milk & cream, concentrated or with added sugar; condensed milk",rate:5,oldRate:12,cat:"Dairy & food",kw:"condensed milk powder"},
+  {code:"0403",type:"hsn",desc:"Yoghurt; pre-packaged curd, lassi & buttermilk",rate:5,oldRate:12,cat:"Dairy & food",kw:"curd dahi lassi chaas buttermilk yogurt"},
+  {code:"0405",type:"hsn",desc:"Butter, ghee & other fats derived from milk; dairy spreads",rate:5,oldRate:12,cat:"Dairy & food",kw:"butter ghee makhan"},
+  {code:"0406",type:"hsn",desc:"Cheese & paneer (pre-packaged and labelled)",rate:5,oldRate:12,cat:"Dairy & food",kw:"paneer cheese chena cottage"},
+  {code:"0407",type:"hsn",desc:"Birds' eggs, in shell, fresh",rate:0,oldRate:0,cat:"Dairy & food",kw:"eggs anda"},
+  {code:"0409",type:"hsn",desc:"Natural honey, pre-packaged and labelled",rate:5,oldRate:5,cat:"Dairy & food",kw:"honey shahad"},
+  {code:"0713",type:"hsn",desc:"Dried leguminous vegetables (pulses), pre-packaged & labelled",rate:5,oldRate:5,cat:"Grains & pulses",kw:"dal pulses lentils moong chana rajma"},
+  {code:"0801",type:"hsn",desc:"Cashew nuts, desiccated coconut, brazil nuts",rate:5,oldRate:5,cat:"Grains & pulses",kw:"cashew kaju coconut nariyal nuts"},
+  {code:"0813",type:"hsn",desc:"Dried fruit; mixtures of nuts or dried fruits",rate:5,oldRate:12,cat:"Grains & pulses",kw:"dry fruit raisin kishmish apricot"},
+  {code:"0901",type:"hsn",desc:"Coffee, roasted; coffee substitutes",rate:5,oldRate:5,cat:"Beverages",kw:"coffee kaffi"},
+  {code:"0902",type:"hsn",desc:"Tea (processed), whether or not flavoured",rate:5,oldRate:5,cat:"Beverages",kw:"tea chai leaves"},
+  {code:"0904",type:"hsn",desc:"Pepper; dried/ground fruits of Capsicum or Pimenta",rate:5,oldRate:5,cat:"Spices",kw:"pepper kali mirch chilli"},
+  {code:"0910",type:"hsn",desc:"Ginger, saffron, turmeric, thyme, curry & other spices",rate:5,oldRate:5,cat:"Spices",kw:"turmeric haldi ginger adrak saffron kesar masala spices"},
+  {code:"1001",type:"hsn",desc:"Wheat & meslin, pre-packaged and labelled",rate:5,oldRate:5,cat:"Grains & pulses",kw:"wheat gehu gehun"},
+  {code:"1006",type:"hsn",desc:"Rice, pre-packaged and labelled",rate:5,oldRate:5,cat:"Grains & pulses",kw:"rice chawal basmati"},
+  {code:"1101",type:"hsn",desc:"Wheat or meslin flour, pre-packaged and labelled",rate:5,oldRate:5,cat:"Grains & pulses",kw:"atta flour maida wheat flour"},
+  {code:"1509",type:"hsn",desc:"Olive oil & its fractions",rate:5,oldRate:5,cat:"Edible oils",kw:"olive oil"},
+  {code:"1511",type:"hsn",desc:"Palm oil & its fractions",rate:5,oldRate:5,cat:"Edible oils",kw:"palm oil"},
+  {code:"1512",type:"hsn",desc:"Sunflower, safflower or cotton-seed oil",rate:5,oldRate:5,cat:"Edible oils",kw:"sunflower oil cooking oil"},
+  {code:"1701",type:"hsn",desc:"Cane or beet sugar; refined sugar, sugar cubes",rate:5,oldRate:12,cat:"Dairy & food",kw:"sugar cheeni chini"},
+  {code:"1704",type:"hsn",desc:"Sugar confectionery (incl. white chocolate), no cocoa",rate:5,oldRate:18,cat:"Dairy & food",kw:"candy toffee confectionery mithai boiled sweet"},
+  {code:"1806",type:"hsn",desc:"Chocolates & other food preparations containing cocoa",rate:5,oldRate:18,cat:"Dairy & food",kw:"chocolate cocoa"},
+  {code:"1901",type:"hsn",desc:"Malt extract; food prep of flour/malt (incl. millet mixes)",rate:5,oldRate:18,cat:"Dairy & food",kw:"malt extract baby food cerelac horlichs food preparation"},
+  {code:"1902",type:"hsn",desc:"Pasta, noodles, macaroni, vermicelli (seviyan)",rate:5,oldRate:12,cat:"Dairy & food",kw:"pasta noodles macaroni vermicelli seviyan spaghetti"},
+  {code:"1905",type:"hsn",desc:"Biscuits, cakes, pastry, rusks & bakers' wares; snack pellets",rate:5,oldRate:18,cat:"Dairy & food",kw:"biscuit cake pastry rusk bread cookies namkeen snacks"},
+  {code:"2009",type:"hsn",desc:"Fruit & vegetable juices, unfermented",rate:5,oldRate:12,cat:"Beverages",kw:"juice fruit juice"},
+  {code:"2105",type:"hsn",desc:"Ice cream & other edible ice",rate:5,oldRate:18,cat:"Dairy & food",kw:"ice cream kulfi"},
+  {code:"2106",type:"hsn",desc:"Namkeens, bhujia, mixtures, sweetmeats & food preparations",rate:5,oldRate:12,cat:"Dairy & food",kw:"namkeen bhujia mixture sweets mithai sweetmeat food preparation"},
+  {code:"2201",type:"hsn",desc:"Mineral & aerated water (no added sugar/flavour)",rate:5,oldRate:18,cat:"Beverages",kw:"water mineral water bisleri packaged water"},
+  {code:"2202",type:"hsn",desc:"Aerated & caffeinated beverages (with sugar)",rate:40,oldRate:28,cat:"Beverages",kw:"cold drink soft drink soda cola pepsi energy drink aerated caffeinated"},
+
+  /* ---------- PERSONAL & HOUSEHOLD CARE ---------- */
+  {code:"3304",type:"hsn",desc:"Beauty & make-up preparations; talcum & face powder",rate:5,oldRate:18,cat:"Personal care",kw:"cosmetics makeup lipstick cream face powder talcum beauty"},
+  {code:"3305",type:"hsn",desc:"Hair oil, shampoo & hair preparations",rate:5,oldRate:18,cat:"Personal care",kw:"shampoo hair oil conditioner"},
+  {code:"3306",type:"hsn",desc:"Toothpaste, tooth powder & dental hygiene preparations",rate:5,oldRate:18,cat:"Personal care",kw:"toothpaste tooth powder dental colgate"},
+  {code:"3401",type:"hsn",desc:"Soap; washing & cleaning preparations",rate:5,oldRate:18,cat:"Personal care",kw:"soap sabun detergent washing"},
+  {code:"3402",type:"hsn",desc:"Detergents & surface-active washing preparations",rate:5,oldRate:18,cat:"Household",kw:"detergent surf washing powder cleaning"},
+  {code:"9603",type:"hsn",desc:"Brooms, brushes, toothbrushes, mops",rate:5,oldRate:18,cat:"Household",kw:"toothbrush brush broom jhadu mop"},
+  {code:"9619",type:"hsn",desc:"Sanitary napkins, diapers & similar articles",rate:5,oldRate:12,cat:"Personal care",kw:"sanitary napkin pad diaper"},
+  {code:"3924",type:"hsn",desc:"Tableware, kitchenware & household articles of plastic",rate:18,oldRate:18,cat:"Household",kw:"plastic tableware bucket bottle tiffin container"},
+  {code:"7323",type:"hsn",desc:"Table, kitchen & household articles of iron or steel",rate:18,oldRate:18,cat:"Household",kw:"steel utensils kitchenware bartan cookware"},
+
+  /* ---------- ELECTRONICS ---------- */
+  {code:"8517",type:"hsn",desc:"Mobile phones & telephones for cellular networks",rate:18,oldRate:18,cat:"Electronics",kw:"mobile phone smartphone cellular telephone iphone samsung"},
+  {code:"8471",type:"hsn",desc:"Computers, laptops & automatic data-processing machines",rate:18,oldRate:18,cat:"Electronics",kw:"laptop computer desktop pc notebook"},
+  {code:"8528",type:"hsn",desc:"Televisions & monitors",rate:18,oldRate:28,cat:"Electronics",kw:"tv television led monitor screen"},
+  {code:"8415",type:"hsn",desc:"Air conditioners",rate:18,oldRate:28,cat:"Electronics",kw:"ac air conditioner split ac"},
+  {code:"8418",type:"hsn",desc:"Refrigerators & freezers",rate:18,oldRate:28,cat:"Electronics",kw:"fridge refrigerator freezer"},
+  {code:"8450",type:"hsn",desc:"Washing machines (household)",rate:18,oldRate:28,cat:"Electronics",kw:"washing machine"},
+  {code:"8516",type:"hsn",desc:"Electric heaters, irons, geysers & heating appliances",rate:18,oldRate:18,cat:"Electronics",kw:"iron geyser heater kettle toaster water heater"},
+  {code:"8544",type:"hsn",desc:"Insulated wires, cables & conductors",rate:18,oldRate:18,cat:"Electronics",kw:"wire cable electrical"},
+  {code:"8506",type:"hsn",desc:"Primary cells & batteries",rate:18,oldRate:18,cat:"Electronics",kw:"battery cell dry cell"},
+  {code:"9504",type:"hsn",desc:"Video game consoles & machines; playing cards",rate:40,oldRate:28,cat:"Electronics",kw:"video game console gaming playstation xbox"},
+
+  /* ---------- AUTOMOBILES ---------- */
+  {code:"8703",type:"hsn",desc:"Small cars (petrol ≤1200cc / diesel ≤1500cc, ≤4000mm)",rate:18,oldRate:28,cat:"Automobiles",kw:"car small car petrol diesel hatchback sedan vehicle"},
+  {code:"8703 (L)",type:"hsn",desc:"Large / luxury cars & SUVs (above small-car limits)",rate:40,oldRate:28,cat:"Automobiles",kw:"luxury car suv large car premium vehicle"},
+  {code:"8711",type:"hsn",desc:"Motorcycles & scooters up to 350cc",rate:18,oldRate:28,cat:"Automobiles",kw:"motorcycle bike scooter two wheeler activa"},
+  {code:"8711 (>350)",type:"hsn",desc:"Motorcycles above 350cc",rate:40,oldRate:28,cat:"Automobiles",kw:"superbike motorcycle royal enfield high cc"},
+  {code:"8712",type:"hsn",desc:"Bicycles & other cycles (non-motorised)",rate:5,oldRate:12,cat:"Automobiles",kw:"bicycle cycle"},
+  {code:"8708",type:"hsn",desc:"Parts & accessories of motor vehicles",rate:18,oldRate:28,cat:"Automobiles",kw:"auto parts spare parts vehicle accessories"},
+  {code:"4011",type:"hsn",desc:"New pneumatic tyres of rubber",rate:18,oldRate:28,cat:"Automobiles",kw:"tyre tire rubber"},
+
+  /* ---------- TEXTILES & FOOTWEAR ---------- */
+  {code:"6109",type:"hsn",desc:"T-shirts, singlets & vests, knitted",rate:5,oldRate:5,cat:"Textiles & apparel",kw:"tshirt t-shirt vest apparel clothing garment"},
+  {code:"6203",type:"hsn",desc:"Men's suits, jackets, trousers (≤₹2,500/piece)",rate:5,oldRate:5,cat:"Textiles & apparel",kw:"mens clothing shirt trouser pant suit apparel"},
+  {code:"6204",type:"hsn",desc:"Women's suits, dresses, skirts (≤₹2,500/piece)",rate:5,oldRate:5,cat:"Textiles & apparel",kw:"womens clothing dress saree kurti apparel"},
+  {code:"6205 (>2500)",type:"hsn",desc:"Apparel priced above ₹2,500 per piece",rate:18,oldRate:12,cat:"Textiles & apparel",kw:"premium clothing expensive apparel branded garment"},
+  {code:"5208",type:"hsn",desc:"Woven cotton fabrics",rate:5,oldRate:5,cat:"Textiles & apparel",kw:"cotton fabric cloth material textile"},
+  {code:"6403",type:"hsn",desc:"Footwear with leather uppers (≤₹2,500/pair)",rate:5,oldRate:12,cat:"Footwear",kw:"shoes footwear leather sandal chappal"},
+  {code:"6404 (>2500)",type:"hsn",desc:"Footwear priced above ₹2,500 per pair",rate:18,oldRate:18,cat:"Footwear",kw:"premium shoes expensive footwear branded"},
+
+  /* ---------- CONSTRUCTION & METALS ---------- */
+  {code:"2523",type:"hsn",desc:"Cement (Portland, aluminous, slag, etc.)",rate:18,oldRate:28,cat:"Construction",kw:"cement portland construction"},
+  {code:"7214",type:"hsn",desc:"Iron & steel bars & rods (TMT etc.)",rate:18,oldRate:18,cat:"Construction",kw:"steel tmt bars rods iron sariya"},
+  {code:"6802",type:"hsn",desc:"Worked monumental/building stone (marble, granite slabs)",rate:18,oldRate:18,cat:"Construction",kw:"marble granite stone tile slab"},
+  {code:"6907",type:"hsn",desc:"Ceramic tiles & flags",rate:18,oldRate:18,cat:"Construction",kw:"tiles ceramic flooring bathroom"},
+  {code:"7308",type:"hsn",desc:"Structures & parts of iron or steel",rate:18,oldRate:18,cat:"Construction",kw:"steel structure fabrication girder"},
+  {code:"3208",type:"hsn",desc:"Paints & varnishes (synthetic polymer based)",rate:18,oldRate:28,cat:"Construction",kw:"paint varnish asian paints coating"},
+  {code:"4407",type:"hsn",desc:"Wood sawn or chipped lengthwise; timber",rate:18,oldRate:18,cat:"Construction",kw:"wood timber plywood lumber"},
+
+  /* ---------- HEALTHCARE & PHARMA ---------- */
+  {code:"3004",type:"hsn",desc:"Medicaments (medicines) in measured doses, retail",rate:5,oldRate:12,cat:"Healthcare",kw:"medicine drug tablet capsule pharma medicament"},
+  {code:"3003",type:"hsn",desc:"Medicaments of two or more constituents, not retail",rate:5,oldRate:12,cat:"Healthcare",kw:"medicine bulk drug ayurvedic"},
+  {code:"3006",type:"hsn",desc:"Surgical dressings, sutures, ostomy appliances",rate:5,oldRate:12,cat:"Healthcare",kw:"surgical dressing bandage suture medical"},
+  {code:"9018",type:"hsn",desc:"Medical, surgical & diagnostic instruments",rate:5,oldRate:12,cat:"Healthcare",kw:"medical device thermometer diagnostic instrument surgical"},
+  {code:"9021",type:"hsn",desc:"Orthopaedic appliances, splints, hearing aids",rate:5,oldRate:5,cat:"Healthcare",kw:"orthopaedic hearing aid splint prosthetic"},
+  {code:"3005",type:"hsn",desc:"Wadding, gauze, adhesive plasters, dressings",rate:5,oldRate:12,cat:"Healthcare",kw:"gauze cotton plaster bandage first aid"},
+  {code:"9004",type:"hsn",desc:"Spectacles, goggles & corrective eyewear",rate:5,oldRate:18,cat:"Healthcare",kw:"spectacles glasses eyewear goggles chashma"},
+
+  /* ---------- STATIONERY, EDUCATION & MISC GOODS ---------- */
+  {code:"4901",type:"hsn",desc:"Printed books, brochures & similar printed matter",rate:0,oldRate:0,cat:"Education & stationery",kw:"books printed book textbook"},
+  {code:"4820",type:"hsn",desc:"Notebooks, registers, exercise books & diaries",rate:0,oldRate:12,cat:"Education & stationery",kw:"notebook register exercise book copy diary"},
+  {code:"9608",type:"hsn",desc:"Pens, ball-point pens & markers",rate:18,oldRate:18,cat:"Education & stationery",kw:"pen ballpoint marker stationery"},
+  {code:"9609",type:"hsn",desc:"Pencils, crayons & pastels",rate:5,oldRate:12,cat:"Education & stationery",kw:"pencil crayon"},
+  {code:"4802",type:"hsn",desc:"Uncoated paper for writing/printing",rate:18,oldRate:18,cat:"Education & stationery",kw:"paper writing printing a4"},
+  {code:"9503",type:"hsn",desc:"Toys (tricycles, dolls, puzzles), non-electronic",rate:5,oldRate:12,cat:"Misc goods",kw:"toys doll puzzle kids toys"},
+  {code:"9401",type:"hsn",desc:"Seats & chairs (incl. convertible into beds)",rate:18,oldRate:18,cat:"Furniture",kw:"chair seat furniture sofa"},
+  {code:"9403",type:"hsn",desc:"Other furniture (tables, cabinets, beds) & parts",rate:18,oldRate:18,cat:"Furniture",kw:"furniture table bed cabinet wardrobe almirah"},
+
+  /* ---------- JEWELLERY & LUXURY ---------- */
+  {code:"7108",type:"hsn",desc:"Gold, unwrought or semi-manufactured",rate:3,oldRate:3,cat:"Jewellery & precious",kw:"gold sona bullion"},
+  {code:"7113",type:"hsn",desc:"Articles of jewellery of precious metal",rate:3,oldRate:3,cat:"Jewellery & precious",kw:"jewellery gold jewelry ornament zewar"},
+  {code:"7106",type:"hsn",desc:"Silver, unwrought or semi-manufactured",rate:3,oldRate:3,cat:"Jewellery & precious",kw:"silver chandi"},
+  {code:"7102",type:"hsn",desc:"Diamonds, whether or not worked",rate:1.5,oldRate:0.25,cat:"Jewellery & precious",kw:"diamond heera"},
+  {code:"7117",type:"hsn",desc:"Imitation jewellery",rate:3,oldRate:3,cat:"Jewellery & precious",kw:"imitation jewellery artificial jewelry fashion"},
+
+  /* ---------- SIN / DEMERIT GOODS ---------- */
+  {code:"2402",type:"hsn",desc:"Cigarettes & cigars (transitioning separately)",rate:40,oldRate:28,cat:"Sin goods",kw:"cigarette cigar tobacco smoking"},
+  {code:"2403",type:"hsn",desc:"Other manufactured tobacco; chewing tobacco",rate:40,oldRate:28,cat:"Sin goods",kw:"tobacco gutkha pan masala chewing"},
+  {code:"2208",type:"hsn",desc:"Spirits, liqueurs & other spirituous beverages*",rate:18,oldRate:18,cat:"Sin goods",kw:"liquor alcohol spirit whisky (state excise applies)"},
+
+  /* ==================== SERVICES (SAC) ==================== */
+  {code:"9954",type:"sac",desc:"Construction services (works contract, buildings)",rate:18,oldRate:18,cat:"Construction services",kw:"construction works contract building civil labour contractor"},
+  {code:"9963",type:"sac",desc:"Hotel accommodation, room tariff ≤ ₹7,500/day",rate:5,oldRate:12,cat:"Hospitality",kw:"hotel accommodation room stay lodging"},
+  {code:"9963 (>7500)",type:"sac",desc:"Hotel accommodation, room tariff above ₹7,500/day",rate:18,oldRate:18,cat:"Hospitality",kw:"luxury hotel premium room accommodation"},
+  {code:"9963 (rest)",type:"sac",desc:"Restaurant & catering services (standalone)",rate:5,oldRate:5,cat:"Hospitality",kw:"restaurant food catering dining eatery dhaba cafe"},
+  {code:"9964",type:"sac",desc:"Passenger transport — economy air, rail, road",rate:5,oldRate:5,cat:"Transport",kw:"transport passenger air ticket flight economy train bus travel"},
+  {code:"9964 (biz)",type:"sac",desc:"Passenger transport — non-economy / business class air",rate:18,oldRate:12,cat:"Transport",kw:"business class flight premium air travel"},
+  {code:"9965",type:"sac",desc:"Goods transport services (GTA, freight)",rate:5,oldRate:5,cat:"Transport",kw:"goods transport freight gta logistics courier cargo"},
+  {code:"9966",type:"sac",desc:"Rental of transport vehicles (with operator)",rate:18,oldRate:18,cat:"Transport",kw:"cab rental car hire taxi vehicle rental"},
+  {code:"9967",type:"sac",desc:"Supporting services in transport (warehousing, handling)",rate:18,oldRate:18,cat:"Transport",kw:"warehousing storage handling logistics support"},
+  {code:"9971",type:"sac",desc:"Individual life & health insurance",rate:0,oldRate:18,cat:"Financial services",kw:"insurance life insurance health insurance policy mediclaim premium"},
+  {code:"9971 (fin)",type:"sac",desc:"Banking & other financial services",rate:18,oldRate:18,cat:"Financial services",kw:"banking finance loan processing bank charges financial"},
+  {code:"9972",type:"sac",desc:"Real estate services (rental of property)",rate:18,oldRate:18,cat:"Professional & business",kw:"real estate property rent commercial rent leasing"},
+  {code:"9973",type:"sac",desc:"Leasing or rental of machinery & equipment",rate:18,oldRate:18,cat:"Professional & business",kw:"leasing rental equipment machinery hire"},
+  {code:"9982",type:"sac",desc:"Legal & accounting services",rate:18,oldRate:18,cat:"Professional & business",kw:"legal accounting lawyer ca chartered accountant audit advocate professional fees"},
+  {code:"9983",type:"sac",desc:"Other professional, technical & business services",rate:18,oldRate:18,cat:"Professional & business",kw:"consultancy professional technical engineering service charge management"},
+  {code:"9983 (IT)",type:"sac",desc:"Information technology & software services",rate:18,oldRate:18,cat:"Professional & business",kw:"it software development web design saas coding programming"},
+  {code:"9984",type:"sac",desc:"Telecommunication, broadcasting & internet services",rate:18,oldRate:18,cat:"Professional & business",kw:"telecom internet broadband mobile recharge dth data plan"},
+  {code:"9985",type:"sac",desc:"Support services (manpower, security, cleaning)",rate:18,oldRate:18,cat:"Professional & business",kw:"manpower supply labour security housekeeping cleaning staffing support"},
+  {code:"9987",type:"sac",desc:"Maintenance, repair & installation services",rate:18,oldRate:18,cat:"Professional & business",kw:"repair maintenance installation amc servicing"},
+  {code:"9988",type:"sac",desc:"Job work — printing, textiles, pharma, leather, food",rate:5,oldRate:12,cat:"Job work",kw:"job work printing manufacturing textile pharma leather processing"},
+  {code:"9989",type:"sac",desc:"Other manufacturing / publishing job-work services",rate:18,oldRate:18,cat:"Job work",kw:"manufacturing publishing job work printing"},
+  {code:"9992",type:"sac",desc:"Education services (coaching, training)",rate:18,oldRate:18,cat:"Education services",kw:"education coaching training tuition classes institute (school exempt)"},
+  {code:"9993",type:"sac",desc:"Human health & social care services",rate:0,oldRate:0,cat:"Healthcare services",kw:"hospital healthcare medical clinic doctor treatment (exempt)"},
+  {code:"9993 (bet)",type:"sac",desc:"Betting, gambling, lottery, casino services",rate:40,oldRate:28,cat:"Entertainment",kw:"betting gambling lottery casino online gaming"},
+  {code:"9994",type:"sac",desc:"Sewage, waste collection & sanitation services",rate:18,oldRate:18,cat:"Professional & business",kw:"sewage waste sanitation garbage cleaning municipal"},
+  {code:"9995",type:"sac",desc:"Services of membership organisations",rate:18,oldRate:18,cat:"Professional & business",kw:"membership association club society organisation"},
+  {code:"9996",type:"sac",desc:"Recreational, cultural & sporting services",rate:18,oldRate:18,cat:"Entertainment",kw:"recreation cultural sporting event amusement park movie cinema"},
+  {code:"9997",type:"sac",desc:"Beauty, wellness & other services (salon, gym, spa)",rate:5,oldRate:18,cat:"Personal services",kw:"salon beauty parlour gym spa wellness yoga fitness haircut"},
+  {code:"9985 (ad)",type:"sac",desc:"Advertising services",rate:18,oldRate:18,cat:"Professional & business",kw:"advertising ad marketing promotion agency"},
+  {code:"996511",type:"sac",desc:"Road transport of goods by refrigerated vehicles",rate:5,oldRate:5,cat:"Transport",kw:"cold chain refrigerated transport goods"},
+];
+
+/* ============ RATE HELPERS ============ */
+function rateClass(r){
+  const map={0:"rate-r0",5:"rate-r5",12:"rate-r12",18:"rate-r18",28:"rate-r28",40:"rate-r40",3:"rate-r3",1.5:"rate-r1_5",0.25:"rate-r0_25"};
+  return map[r]||"rate-r18";
+}
+function rateBucket(r){
+  if(r===0) return "0";
+  if(r===5) return "5";
+  if(r===18) return "18";
+  if(r===40) return "40";
+  return "other"; // 3, 1.5, 0.25, 12, 28 etc.
+}
+function fmtRate(r){
+  const s=(r%1===0)? r.toString() : r.toString();
+  return s;
+}
+
+/* ============ SEARCH INDEX ============ */
+DATA.forEach(d=>{
+  d._blob=(d.code+" "+d.desc+" "+d.cat+" "+(d.kw||"")+" "+(d.type==="hsn"?"hsn goods":"sac service")).toLowerCase();
+});
+
+function scoreMatch(d,q){
+  if(!q) return 1;
+  const blob=d._blob, code=d.code.toLowerCase(), desc=d.desc.toLowerCase();
+  let score=0;
+  // exact code match
+  if(code===q||code.replace(/\s.*/,"")===q) score+=100;
+  else if(code.startsWith(q)) score+=60;
+  else if(code.includes(q)) score+=30;
+  // word-based matching across all query tokens
+  const tokens=q.split(/\s+/).filter(Boolean);
+  let allTokensHit=true;
+  tokens.forEach(t=>{
+    if(desc.includes(t)) score+=20;
+    else if(blob.includes(t)) score+=10;
+    else allTokensHit=false;
+  });
+  if(!allTokensHit && score<30) return 0;
+  // prefer description-start matches
+  if(desc.startsWith(q)) score+=15;
+  return score;
+}
+
+/* ============ RELATED CODES ============ */
+function relatedFor(item,all){
+  // same category, similar HSN chapter (first 2 digits) or same SAC heading
+  const chap = item.code.replace(/\D.*$/,"").slice(0,2);
+  return all
+    .filter(d=>d.code!==item.code)
+    .map(d=>{
+      let rel=0;
+      if(d.cat===item.cat) rel+=3;
+      const dchap=d.code.replace(/\D.*$/,"").slice(0,2);
+      if(dchap && dchap===chap) rel+=4;
+      if(d.type===item.type) rel+=1;
+      return {d,rel};
+    })
+    .filter(x=>x.rel>=4)  // must share chapter or be strongly related
+    .sort((a,b)=>b.rel-a.rel)
+    .slice(0,4)
+    .map(x=>x.d);
+}
+
+/* ============ STATE ============ */
+let state={q:"",type:"all",rate:"all"};
+
+/* ============ RENDER ============ */
+const resultsEl=document.getElementById("results");
+const countEl=document.getElementById("count");
+
+const SUGGESTIONS=["paneer","mobile phone","salon","cement","medicine","8703","hotel","insurance","ice cream","gold"];
+
+function render(){
+  const q=state.q.trim().toLowerCase();
+  let list=DATA
+    .map(d=>({d,s:scoreMatch(d,q)}))
+    .filter(x=>x.s>0)
+    .filter(x=> state.type==="all" || x.d.type===state.type )
+    .filter(x=> state.rate==="all" || rateBucket(x.d.rate)===state.rate )
+    .sort((a,b)=> b.s-a.s || a.d.code.localeCompare(b.d.code));
+
+  // empty search: show a helpful prompt instead of dumping everything
+  if(!q && state.type==="all" && state.rate==="all"){
+    resultsEl.innerHTML=`
+      <div class="empty">
+        <h3>Start typing to find a GST rate</h3>
+        <p>Search a product or service name, or type an HSN/SAC code directly. Try one of these:</p>
+        <div class="suggest-chips">
+          ${SUGGESTIONS.map(s=>`<button class="suggest-chip" data-s="${s}">${s}</button>`).join("")}
+        </div>
+      </div>`;
+    countEl.textContent="";
+    bindSuggest();
+    return;
+  }
+
+  if(list.length===0){
+    resultsEl.innerHTML=`
+      <div class="empty">
+        <h3>No matching codes found</h3>
+        <p>Try a different keyword or a broader term. This finder covers commonly-searched items — for a complete schedule, check the official GST portal, or ask our CAs.</p>
+        <div class="suggest-chips">
+          ${SUGGESTIONS.slice(0,6).map(s=>`<button class="suggest-chip" data-s="${s}">${s}</button>`).join("")}
+        </div>
+      </div>`;
+    countEl.innerHTML=`No results for <b>"${escapeHtml(state.q)}"</b>`;
+    bindSuggest();
+    return;
+  }
+
+  countEl.innerHTML=`<b>${list.length}</b> ${list.length===1?"result":"results"}${q?` for "${escapeHtml(state.q)}"`:""}`;
+
+  resultsEl.innerHTML=list.map(({d})=>{
+    const rc=rateClass(d.rate);
+    const half=(d.rate/2);
+    const showSplit = d.rate>0;
+    const oldChanged = d.oldRate!=null && d.oldRate!==d.rate;
+    const rel=relatedFor(d,DATA);
+    return `
+    <div class="result-card">
+      <div class="rc-top">
+        <div class="rc-left">
+          <div class="rc-code-row">
+            <span class="rc-code">${escapeHtml(d.code)}</span>
+            <span class="rc-badge ${d.type}">${d.type==="hsn"?"HSN · Goods":"SAC · Service"}</span>
+          </div>
+          <div class="rc-desc">${escapeHtml(d.desc)}</div>
+          <div class="rc-cat">Category: <span>${escapeHtml(d.cat)}</span></div>
+        </div>
+        <div class="rate-box">
+          <div class="rate-val ${rc}">${fmtRate(d.rate)}<small>%</small></div>
+          <div class="rate-lbl">GST</div>
+          ${oldChanged?`<div class="rate-old">was <s>${fmtRate(d.oldRate)}%</s></div>`:``}
+        </div>
+      </div>
+      ${showSplit?`
+      <div class="split-note">
+        <span><b>Intra-state:</b> CGST ${fmtRate(half)}% + SGST ${fmtRate(half)}%</span>
+        <span><b>Inter-state:</b> IGST ${fmtRate(d.rate)}%</span>
+      </div>`:``}
+      ${rel.length?`
+      <div class="related">
+        <div class="related-title">Related codes</div>
+        <div class="related-chips">
+          ${rel.map(r=>`
+            <button class="related-chip" data-code="${escapeHtml(r.code)}">
+              <code>${escapeHtml(r.code)}</code>
+              <span class="rr ${rateClass(r.rate)}">${fmtRate(r.rate)}%</span>
+              <span class="rt">${escapeHtml(r.desc)}</span>
+            </button>`).join("")}
+        </div>
+      </div>`:``}
+    </div>`;
+  }).join("");
+
+  bindRelated();
+}
+
+function escapeHtml(s){return (s+"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+function bindSuggest(){
+  document.querySelectorAll(".suggest-chip").forEach(b=>{
+    b.onclick=()=>{ setSearch(b.dataset.s); };
+  });
+}
+function bindRelated(){
+  document.querySelectorAll(".related-chip").forEach(b=>{
+    b.onclick=()=>{ setSearch(b.dataset.code); window.scrollTo({top:document.querySelector('.results-wrap').offsetTop-80,behavior:'smooth'}); };
+  });
+}
+
+/* ============ WIRING ============ */
+const searchEl=document.getElementById("search");
+const clearEl=document.getElementById("clear");
+
+function setSearch(v){
+  searchEl.value=v; state.q=v;
+  clearEl.style.display = v ? "grid" : "none";
+  render();
+  searchEl.focus();
+}
+
+searchEl.addEventListener("input",e=>{
+  state.q=e.target.value;
+  clearEl.style.display = e.target.value ? "grid":"none";
+  render();
+});
+clearEl.addEventListener("click",()=>setSearch(""));
+
+document.getElementById("type-chips").addEventListener("click",e=>{
+  if(!e.target.classList.contains("chip"))return;
+  state.type=e.target.dataset.type;
+  document.querySelectorAll("#type-chips .chip").forEach(c=>c.classList.toggle("active",c===e.target));
+  render();
+});
+document.getElementById("rate-chips").addEventListener("click",e=>{
+  if(!e.target.classList.contains("chip"))return;
+  state.rate=e.target.dataset.rate;
+  document.querySelectorAll("#rate-chips .chip").forEach(c=>c.classList.toggle("active",c===e.target));
+  render();
+});
+
+// initial
+render();
+</script>
+</body>
+</html>
