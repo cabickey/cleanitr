@@ -3,55 +3,286 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSTR-2B Summary Maker — Clean ITR</title>
+<meta name="description" content="Free GSTR-2B Analyzer — upload GSTR-2B Excel files from the GST portal and get a party-wise ITC summary, rate-wise breakup, ITC eligibility flags, duplicate detection and a combined Excel export. 100% in your browser. By CleanITR.">
+<title>GSTR-2B Analyzer — ITC Reconciliation & Summary | CleanITR</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230e7c66'/%3E%3Cpath d='M18 8l-7.5 8L6 12' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://cleanitr.com/tools/gstr2b-analyzer.html">
+<meta property="og:title" content="GSTR-2B Analyzer — CleanITR">
+<meta property="og:description" content="Upload GSTR-2B Excel, get party-wise ITC, rate-wise breakup, eligibility flags, duplicate detection & combined Excel export.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tools/_calc.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root { --bd:#d0d5dd; --hd:#1f3a5f; --hd2:#2c5282; --bg:#f7f9fc; --accent:#2c5282; }
-  * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; margin:0; padding:24px; background:var(--bg); color:#1a202c; }
-  h1 { font-size:22px; margin:0 0 4px; }
-  .sub { color:#667085; font-size:13px; margin-bottom:20px; }
-  .controls { background:#fff; border:1px solid var(--bd); border-radius:10px; padding:16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
-  input[type=file] { font-size:13px; }
-  button { background:var(--accent); color:#fff; border:0; padding:9px 18px; border-radius:7px; font-size:14px; cursor:pointer; }
-  button:disabled { background:#9aa5b1; cursor:not-allowed; }
-  button.sec { background:#fff; color:var(--accent); border:1px solid var(--accent); }
-  #status { font-size:13px; color:#475467; margin:14px 0; white-space:pre-wrap; }
-  .cards { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0; }
-  .card { background:#fff; border:1px solid var(--bd); border-radius:10px; padding:14px 18px; min-width:150px; }
-  .card .k { font-size:12px; color:#667085; }
-  .card .v { font-size:20px; font-weight:700; color:var(--hd); margin-top:2px; }
-  .tabs { display:flex; flex-wrap:wrap; gap:6px; margin:18px 0 0; }
-  .tab { padding:8px 14px; border:1px solid var(--bd); border-bottom:0; border-radius:8px 8px 0 0; background:#eef2f7; cursor:pointer; font-size:13px; }
-  .tab.active { background:#fff; font-weight:600; color:var(--accent); }
-  .panel { background:#fff; border:1px solid var(--bd); border-radius:0 10px 10px 10px; padding:12px; overflow:auto; }
-  table { border-collapse:collapse; width:100%; font-size:12.5px; }
-  th,td { border:1px solid #e4e7ec; padding:6px 8px; text-align:right; white-space:nowrap; }
-  th { background:var(--hd); color:#fff; position:sticky; top:0; font-weight:600; }
-  td.l,th.l { text-align:left; }
-  tr:nth-child(even) td { background:#fafbfc; }
-  tfoot td { font-weight:700; background:#eef2f7 !important; }
-  .muted { color:#98a2b3; font-style:italic; padding:20px; text-align:center; }
+  /* ===== Fallback tokens so the tool also works standalone (outside cleanitr.com).
+         When _calc.css loads on the site, its :root wins where it defines the same names. ===== */
+  :root{
+    --paper:#f4f6f5; --paper-2:#ffffff; --line:#e2e8e5;
+    --ink:#0f2a2e; --ink-soft:#5c6b68;
+    --teal:#0e7c66; --teal-deep:#0a5c4b; --teal-light:#e3f2ec;
+    --gold:#b8860b; --gold-light:#fbf3dd;
+    --r:16px; --shadow:0 1px 2px rgba(15,42,46,.05),0 8px 24px rgba(15,42,46,.04);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--teal-deep);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---- header / footer (mirrors the finder) ---- */
+  header{background:var(--paper-2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+  .nav{max-width:1040px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .logo-mark{width:34px;height:34px;border-radius:9px;background:var(--teal);display:grid;place-items:center;flex-shrink:0}
+  .logo-mark svg{width:19px;height:19px}
+  .brand-text .name{font-family:'Sora',sans-serif;font-weight:800;font-size:1.02rem;letter-spacing:-.01em;line-height:1;color:var(--ink)}
+  .brand-text .name span{color:var(--teal)}
+  .brand-text .sub{font-size:.66rem;color:var(--ink-soft);margin-top:2px;letter-spacing:.02em}
+  .back{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;color:var(--ink-soft)}
+  .back svg{width:15px;height:15px}
+  .back:hover{color:var(--teal-deep);text-decoration:none}
+  footer{max-width:1040px;margin:30px auto 40px;padding:0 20px;font-size:.8rem;color:var(--ink-soft);text-align:center}
+
+  .page{max-width:1040px;margin:0 auto;padding:26px 20px 0}
+  .eyebrow{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:5px 11px;border-radius:999px;margin-bottom:12px}
+  h1{font-family:'Sora',sans-serif;font-weight:800;font-size:1.85rem;letter-spacing:-.02em;margin:0 0 8px;line-height:1.1}
+  .lead{font-size:.98rem;color:var(--ink-soft);max-width:70ch;margin:0 0 22px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ---- segmented tabs ---- */
+  .tabs{display:flex;gap:6px;background:var(--paper-2);border:1px solid var(--line);border-radius:13px;padding:5px;margin-bottom:22px;box-shadow:var(--shadow);overflow-x:auto}
+  .tab{flex:1 0 auto;padding:11px 14px;border:0;background:transparent;font:inherit;font-weight:700;font-size:.9rem;color:var(--ink-soft);border-radius:9px;cursor:pointer;transition:.18s;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+  .tab svg{width:16px;height:16px;flex-shrink:0}
+  .tab.active{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(14,124,102,.28)}
+  .tab:not(.active):hover{background:var(--teal-light);color:var(--teal-deep)}
+  .tab .badge{background:rgba(255,255,255,.25);border-radius:999px;padding:1px 7px;font-size:.7rem;font-weight:800}
+  .tab:not(.active) .badge{background:var(--teal-light);color:var(--teal-deep)}
+
+  .pane{display:none}
+  .pane.active{display:block;animation:fadeUp .35s ease}
+
+  /* ---- upload / controls ---- */
+  .uploadbox{background:var(--paper-2);border:1.5px dashed var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:30px 24px;text-align:center;transition:.18s}
+  .uploadbox.drag{border-color:var(--teal);background:var(--teal-light)}
+  .uploadbox .ic{width:46px;height:46px;margin:0 auto 12px;border-radius:12px;background:var(--teal-light);display:grid;place-items:center}
+  .uploadbox .ic svg{width:24px;height:24px;color:var(--teal)}
+  .uploadbox h3{font-family:'Sora',sans-serif;font-size:1.05rem;margin:0 0 5px}
+  .uploadbox p{font-size:.88rem;color:var(--ink-soft);margin:0 0 16px}
+  .filepick{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;font:inherit;font-weight:700;font-size:.9rem;padding:11px 20px;border-radius:11px;cursor:pointer;border:0;transition:.15s}
+  .filepick:hover{background:var(--teal-deep)}
+  .filepick svg{width:16px;height:16px}
+  #fileInput{display:none}
+  .filelist{margin-top:16px;display:flex;flex-direction:column;gap:7px;text-align:left}
+  .fileitem{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:.84rem}
+  .fileitem svg{width:15px;height:15px;color:var(--teal);flex-shrink:0}
+  .fileitem .rm{margin-left:auto;border:0;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:1rem;line-height:1;padding:2px 6px;border-radius:6px}
+  .fileitem .rm:hover{background:#f6dede;color:#b23b3b}
+
+  .actionrow{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 0;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;border:0;font:inherit;font-weight:700;font-size:.9rem;padding:11px 20px;border-radius:11px;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--teal-deep)}
+  .btn:disabled{background:#a7b3b0;cursor:not-allowed}
+  .btn.sec{background:var(--paper-2);color:var(--teal-deep);border:1.5px solid var(--teal)}
+  .btn.sec:hover{background:var(--teal-light)}
+  .btn.sec:disabled{color:#a7b3b0;border-color:var(--line);background:var(--paper-2)}
+  .btn svg{width:16px;height:16px}
+
+  #status{font-size:.85rem;color:var(--ink-soft);margin:14px 0 0;white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace}
+  #status .ok{color:var(--teal-deep)}
+  #status .err{color:#b23b3b}
+
+  /* ---- stat cards ---- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:22px 0}
+  .card{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:15px 17px;box-shadow:var(--shadow)}
+  .card .k{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
+  .card .v{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800;color:var(--ink);margin-top:5px;letter-spacing:-.01em;line-height:1.1}
+  .card.acc .v{color:var(--teal-deep)}
+  .card.warn{border-color:#f0d9a8;background:var(--gold-light)}
+  .card.warn .v{color:var(--gold)}
+  .card .sub2{font-size:.72rem;color:var(--ink-soft);margin-top:3px}
+
+  /* ---- sub-tabs (section switcher) ---- */
+  .subtabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+  .subtab{padding:7px 13px;border:1.5px solid var(--line);background:var(--paper-2);color:var(--ink-soft);font:inherit;font-size:.82rem;font-weight:600;border-radius:999px;cursor:pointer;transition:.15s}
+  .subtab:hover{border-color:var(--teal);color:var(--teal-deep)}
+  .subtab.active{background:var(--teal);border-color:var(--teal);color:#fff}
+  .subtab .n{opacity:.75;font-weight:700;margin-left:4px}
+
+  /* ---- toolbar (search / filter within a table) ---- */
+  .tbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+  .tsearch{position:relative;flex:1;min-width:200px}
+  .tsearch svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-soft);pointer-events:none}
+  .tsearch input{width:100%;padding:10px 14px 10px 38px;border:1.5px solid var(--line);border-radius:10px;background:var(--paper-2);font:inherit;font-size:.88rem;color:var(--ink)}
+  .tsearch input:focus{outline:none;border-color:var(--teal)}
+  .selrate{padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--paper-2);font:inherit;font-size:.85rem;color:var(--ink);cursor:pointer}
+
+  /* ---- tables ---- */
+  .tablewrap{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:auto;max-height:70vh}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:.82rem}
+  th,td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+  th{background:var(--paper);color:var(--ink);position:sticky;top:0;font-weight:700;font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;z-index:2}
+  th.l,td.l{text-align:left}
+  tbody tr:hover td{background:var(--teal-light)}
+  tfoot td{font-weight:800;background:var(--paper);position:sticky;bottom:0;border-top:2px solid var(--teal)}
+  td.pos{color:var(--teal-deep)}
+  td.neg{color:#b23b3b}
+  .pill{display:inline-block;font-size:.66rem;font-weight:800;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+  .pill.elig{background:var(--teal-light);color:var(--teal-deep)}
+  .pill.inelig{background:#f6dede;color:#b23b3b}
+  .pill.rcm{background:var(--gold-light);color:var(--gold)}
+  .pill.sec{background:#eef1f0;color:var(--ink-soft)}
+  .flagdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .flagdot.dup{background:#b23b3b}
+
+  .muted{color:var(--ink-soft);font-style:italic;padding:34px;text-align:center}
+
+  /* ---- guide / how-to ---- */
+  .guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:22px}
+  .gcard{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .gcard .gn{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;font-weight:800;color:var(--teal);letter-spacing:.08em}
+  .gcard h4{font-family:'Sora',sans-serif;font-size:.98rem;margin:6px 0 7px}
+  .gcard p{font-size:.86rem;color:var(--ink-soft);margin:0;line-height:1.5}
+  .gcard p b{color:var(--ink)}
+  .feat{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .feat li{display:flex;gap:10px;align-items:flex-start;background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:.87rem;color:var(--ink)}
+  .feat li svg{width:17px;height:17px;color:var(--teal);flex-shrink:0;margin-top:2px}
+  .feat li b{display:block;margin-bottom:1px}
+  .feat li span{color:var(--ink-soft);font-size:.82rem}
+  .steps-note{background:var(--gold-light);border:1px solid #f0d9a8;border-radius:12px;padding:13px 16px;font-size:.85rem;color:var(--ink);display:flex;gap:10px;align-items:flex-start;margin-top:16px}
+  .steps-note svg{width:16px;height:16px;color:var(--gold);flex-shrink:0;margin-top:2px}
+  .h-sec{font-family:'Sora',sans-serif;font-size:1.15rem;margin:26px 0 12px}
+  .h-sec:first-child{margin-top:0}
+
+  /* ---- cta + disclaimer ---- */
+  .cta{margin:26px 0 0;background:var(--teal-light);border:1px solid #c5e5da;border-radius:13px;padding:15px 18px;display:flex;gap:12px;align-items:center;font-size:.9rem;color:var(--teal-deep)}
+  .cta svg{width:22px;height:22px;flex-shrink:0}
+  .cta a{font-weight:700}
+  .note{margin-top:18px;font-size:.76rem;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;line-height:1.6}
+  .note b{color:var(--ink)}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:11px;font-size:.86rem;font-weight:600;opacity:0;pointer-events:none;transition:.28s;z-index:200;box-shadow:0 10px 30px rgba(15,42,46,.3)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:600px){
+    h1{font-size:1.5rem}
+    .tab span{display:none}
+    .tab{flex:1 0 auto;padding:11px}
+    .page{padding:20px 14px 0}
+  }
 </style>
 </head>
 <body>
-<h1>📊 GSTR-2B Summary Maker</h1>
-<div class="sub">Upload one or more GSTR-2B Excel files downloaded from the GST portal. All sections parsed; party-wise summary + combined Excel export.</div>
+<header>
+  <div class="nav">
+    <a href="/" class="brand">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div class="brand-text"><div class="name">Clean<span>ITR</span></div><div class="sub">Tax Platform by Chartered Accountants</div></div>
+    </a>
+    <a href="/tools.html" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All tools</a>
+  </div>
+</header>
 
-<div class="controls">
-  <input type="file" id="fileInput" multiple accept=".xlsx,.xls">
-  <button id="goBtn" onclick="run()">Process</button>
-  <button id="dlBtn" class="sec" onclick="downloadExcel()" disabled>⬇ Download Combined Excel</button>
-</div>
-<div id="status"></div>
-<div class="cards" id="cards"></div>
-<div class="tabs" id="tabs"></div>
-<div class="panel" id="panel"><div class="muted">No data yet — upload files and click Process.</div></div>
+<main class="page">
+  <span class="eyebrow">Free tool · Input Tax Credit</span>
+  <h1>GSTR-2B Analyzer</h1>
+  <p class="lead">Upload one or more GSTR-2B Excel files straight from the GST portal. Get a clean party-wise ITC summary, rate-wise tax breakup, ITC eligibility flags, duplicate-invoice detection and a single combined Excel — all processed in your browser. Nothing is uploaded to any server.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-pane="analyze" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-5"/></svg><span>Analyze</span></button>
+    <button class="tab" data-pane="parties" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Party-wise</span><span class="badge" id="badge-parties" style="display:none">0</span></button>
+    <button class="tab" data-pane="sections" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18M3 15h18M9 3v18"/></svg><span>Records</span><span class="badge" id="badge-records" style="display:none">0</span></button>
+    <button class="tab" data-pane="checks" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg><span>Checks</span><span class="badge" id="badge-checks" style="display:none">0</span></button>
+    <button class="tab" data-pane="guide" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span>How to use</span></button>
+  </div>
+
+  <!-- ANALYZE PANE -->
+  <section class="pane active" id="pane-analyze">
+    <div class="uploadbox" id="dropzone">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></div>
+      <h3>Add your GSTR-2B Excel files</h3>
+      <p>Drag &amp; drop here, or pick files. You can add several months at once — they'll be combined.</p>
+      <label class="filepick" for="fileInput"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Choose .xlsx files</label>
+      <input type="file" id="fileInput" multiple accept=".xlsx,.xls">
+      <div class="filelist" id="filelist"></div>
+    </div>
+    <div class="actionrow">
+      <button class="btn" id="goBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg> Process files</button>
+      <button class="btn sec" id="dlBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> Download combined Excel</button>
+      <button class="btn sec" id="resetBtn" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset</button>
+    </div>
+    <div id="status"></div>
+    <div class="cards" id="cards"></div>
+    <div id="analyze-hint"></div>
+  </section>
+
+  <!-- PARTY-WISE PANE -->
+  <section class="pane" id="pane-parties">
+    <div class="tbar">
+      <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="partySearch" placeholder="Search supplier name or GSTIN…" autocomplete="off"></div>
+    </div>
+    <div id="party-table"><div class="muted">Process files first — the party-wise ITC summary will appear here.</div></div>
+  </section>
+
+  <!-- RECORDS PANE -->
+  <section class="pane" id="pane-sections">
+    <div class="subtabs" id="section-subtabs"></div>
+    <div class="tbar">
+      <div class="tsearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="recSearch" placeholder="Search GSTIN, name or invoice no…" autocomplete="off"></div>
+      <select class="selrate" id="recRate"><option value="all">All rates</option></select>
+    </div>
+    <div id="record-table"><div class="muted">Process files first — invoice-level records will appear here, section by section.</div></div>
+  </section>
+
+  <!-- CHECKS PANE -->
+  <section class="pane" id="pane-checks">
+    <div id="checks-body"><div class="muted">Process files first — duplicate invoices and ITC alerts will appear here.</div></div>
+  </section>
+
+  <!-- GUIDE PANE -->
+  <section class="pane" id="pane-guide">
+    <div class="h-sec">How to use it</div>
+    <div class="guide">
+      <div class="gcard"><div class="gn">STEP 01</div><h4>Download GSTR-2B</h4><p>On the <b>GST portal</b> → Returns → GSTR-2B, pick the period and use <b>Download → Generate Excel</b>. Repeat for every month you want to include.</p></div>
+      <div class="gcard"><div class="gn">STEP 02</div><h4>Add the files</h4><p>Drag the downloaded <b>.xlsx</b> files onto the Analyze tab, or choose them. Add multiple months together — the tool merges them.</p></div>
+      <div class="gcard"><div class="gn">STEP 03</div><h4>Process</h4><p>Click <b>Process files</b>. Every section — B2B, CDNR, ECO, ISD, amendments and ITC-reversal sheets — is read and normalised automatically.</p></div>
+      <div class="gcard"><div class="gn">STEP 04</div><h4>Review &amp; export</h4><p>Check the party-wise ITC, records and alerts, then <b>Download the combined Excel</b> for your working papers or reconciliation.</p></div>
+    </div>
+
+    <div class="h-sec">What it does</div>
+    <ul class="feat">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Party-wise ITC summary</b><span>Every supplier's taxable value + IGST/CGST/SGST/Cess totalled across all sections and months.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Rate-wise tax breakup</b><span>Filter records by GST rate to reconcile 5% / 12% / 18% / 28% purchases quickly.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>ITC eligibility flags</b><span>Reads the portal's "ITC Available" column and separates eligible from ineligible credit.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Credit &amp; debit notes handled</b><span>Credit notes are auto-subtracted so your net ITC is correct, not double-counted.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Duplicate detection</b><span>Same GSTIN + invoice no + value across files is flagged so you don't claim twice.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Reverse-charge &amp; POS alerts</b><span>RCM supplies and negative/mismatched entries are surfaced in the Checks tab.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Combined Excel export</b><span>One workbook: party summary, all records, per-section sheets and a checks sheet.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>100% private</b><span>Everything runs locally in your browser. Your purchase data never leaves your device.</span></div></li>
+    </ul>
+
+    <div class="steps-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg><div>Use the <b>original Excel from the GST portal</b> (not a re-saved or edited copy). The tool matches the portal's exact sheet names and two-row headers; a modified file may not parse.</div></div>
+
+    <div class="cta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Need help reconciling 2B with your purchase register or books? <a href="https://wa.me/917838808704?text=Hi%20CleanITR%2C%20I%20need%20help%20with%20GSTR-2B%20reconciliation">Ask a CA →</a></span>
+    </div>
+  </section>
+
+  <div class="note" id="disclaimer">
+    <b>About this tool.</b> The GSTR-2B Analyzer reads the official Excel exported from the GST portal and totals it for your convenience. ITC eligibility shown here reflects the <b>"ITC Available"</b> flag in the portal file; final eligibility still depends on Section 16 conditions (goods/services received, tax actually paid by the supplier, and Rule 42/43 and Section 17(5) restrictions) which this tool cannot verify. Credit notes are treated as reductions to net credit. Always reconcile against your purchase register and books before claiming ITC in GSTR-3B. This tool is general guidance, not professional advice.
+  </div>
+</main>
+
+<footer>© 2026 Clean ITR · Tax Platform by Chartered Accountants</footer>
+<div class="toast" id="toast"></div>
 
 <script>
-// ---- Sheet config. Each section maps to canonical fields by matching header text. ----
-// "amend" sheets carry original cols on the left; we read the Revised block.
+/* ============================================================
+   PARSING ENGINE  (logic preserved from the working analyzer,
+   extended with ITC-eligibility + RCM + POS + place-of-supply)
+   ============================================================ */
 const SECTIONS = [
   {sheet:"B2B",            label:"B2B"},
   {sheet:"B2BA",           label:"B2BA", amend:true},
@@ -70,7 +301,6 @@ const SECTIONS = [
 const norm = s => String(s==null?"":s).replace(/\s+/g," ").trim().toLowerCase();
 const N = v => { const n = parseFloat(String(v==null?"":v).replace(/,/g,"")); return isFinite(n)?n:0; };
 
-// Build a header lookup: for each column index, the combined text of rows 5+6 (or any two header rows).
 function buildHeaders(rows, hdrTop, hdrBot){
   const top = rows[hdrTop]||[], bot = rows[hdrBot]||[], n = Math.max(top.length, bot.length);
   const heads = [];
@@ -80,8 +310,6 @@ function buildHeaders(rows, hdrTop, hdrBot){
   }
   return heads;
 }
-
-// Find the column whose header contains ALL given keyword groups (each group = array of alternatives).
 function findCol(heads, ...groups){
   for(let c=0;c<heads.length;c++){
     const h = heads[c];
@@ -89,13 +317,10 @@ function findCol(heads, ...groups){
   }
   return -1;
 }
-
-// Locate the two header rows + data start by scanning for "gstin"/"icegate"/"taxable".
 function locate(rows){
   for(let r=0;r<Math.min(rows.length,12);r++){
     const joined = (rows[r]||[]).map(norm).join("|");
     if(joined.includes("gstin") || joined.includes("note number") || joined.includes("document number")){
-      // header top = r, bottom = r+1, data starts r+2 (GST portal pattern)
       return {top:r, bot:r+1, data:r+2};
     }
   }
@@ -107,7 +332,6 @@ function parseSheet(rows, cfg){
   if(!loc) return [];
   const heads = buildHeaders(rows, loc.top, loc.bot);
 
-  // Column resolution (label-based, tolerant of section differences)
   const cGstin  = findCol(heads, ["gstin"]);
   const cName   = findCol(heads, ["trade","legal name"]);
   const cDocNo  = findCol(heads, ["invoice number","note number","document number"]);
@@ -119,6 +343,10 @@ function parseSheet(rows, cfg){
   const cCess   = findCol(heads, ["cess"]);
   const cVal    = findCol(heads, ["invoice value","note value","document value"]);
   const cType   = findCol(heads, ["invoice type","note type","document type"]);
+  const cItc    = findCol(heads, ["itc availability","itc available","availability of itc"]);
+  const cRcm    = findCol(heads, ["supply attract reverse charge","reverse charge"]);
+  const cPos    = findCol(heads, ["place of supply","pos"]);
+  const cRate   = findCol(heads, ["rate (%)","rate(%)","rate %"]);
 
   const out = [];
   for(let r=loc.data;r<rows.length;r++){
@@ -129,13 +357,31 @@ function parseSheet(rows, cfg){
     let igst=N(row[cIgst]), cgst=N(row[cCgst]), sgst=N(row[cSgst]), cess=N(row[cCess]);
     let val = cVal>=0 ? N(row[cVal]) : 0;
     const typeStr = cType>=0 ? String(row[cType]||"").trim() : "";
-    // Credit Note => subtract (taxable + tax + value), Debit Note => add (positive, default)
     const t = norm(typeStr);
     const sign = t.includes("credit") ? -1 : 1;
     taxable*=sign; igst*=sign; cgst*=sign; sgst*=sign; cess*=sign; val*=sign;
     const gst = igst+cgst+sgst+cess;
-    // skip fully empty value rows
     if(!gstin && !taxable && !gst && !val && !(cDocNo>=0 && row[cDocNo])) continue;
+
+    // ITC eligibility (portal flag). Blank on some sections => treat as eligible for that section.
+    const itcRaw = cItc>=0 ? String(row[cItc]||"").trim() : "";
+    const itcN = norm(itcRaw);
+    let eligible = true;
+    if(itcN){ eligible = !(itcN.startsWith("n") || itcN.includes("no")); }
+    // ITC-reversal sections are, by nature, reversal — mark ineligible
+    if(cfg.label.includes("Rev")) eligible = false;
+
+    const rcmRaw = cRcm>=0 ? String(row[cRcm]||"").trim() : "";
+    const rcm = norm(rcmRaw).startsWith("y");
+
+    // derive an approximate rate bucket from tax/taxable when explicit rate col missing
+    let rate = cRate>=0 ? N(row[cRate]) : 0;
+    if(!rate){
+      const base = Math.abs(taxable);
+      const tax = Math.abs(igst+cgst+sgst);
+      if(base>0){ rate = Math.round((tax/base)*100*2)/2; }
+    }
+
     out.push({
       section: cfg.label,
       gstin: gstin || "—",
@@ -143,25 +389,64 @@ function parseSheet(rows, cfg){
       doc: cDocNo>=0 ? String(row[cDocNo]||"").trim() : "",
       date: cDocDt>=0 ? String(row[cDocDt]||"").trim() : "",
       type: typeStr,
+      pos: cPos>=0 ? String(row[cPos]||"").trim() : "",
+      rate,
+      eligible, itcFlag:itcRaw, rcm,
       taxable, igst, cgst, sgst, cess, gst, val
     });
   }
   return out;
 }
 
-let ALL = [];   // all invoice rows
+/* ============================================================
+   STATE + ORCHESTRATION
+   ============================================================ */
+let ALL = [];
 let bySection = {};
+let FILES = [];          // File objects staged for processing
+let DUPES = [];          // duplicate groups
 
+const $ = id => document.getElementById(id);
+function fmt(n){ return (n||0).toLocaleString('en-IN',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmt0(n){ return (n||0).toLocaleString('en-IN'); }
+function esc(s){return (s+'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let toastT;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);}
+
+/* ---- file staging + drag/drop ---- */
+function renderFileList(){
+  const el = $('filelist');
+  if(!FILES.length){ el.innerHTML=''; return; }
+  el.innerHTML = FILES.map((f,i)=>`<div class="fileitem">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+    <span>${esc(f.name)}</span>
+    <button class="rm" data-i="${i}" title="Remove">✕</button>
+  </div>`).join('');
+  el.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{FILES.splice(+b.dataset.i,1);renderFileList();});
+}
+function addFiles(list){
+  for(const f of list){
+    if(!/\.(xlsx|xls)$/i.test(f.name)) continue;
+    if(!FILES.some(x=>x.name===f.name && x.size===f.size)) FILES.push(f);
+  }
+  renderFileList();
+}
+$('fileInput').addEventListener('change', e=>{ addFiles(e.target.files); e.target.value=''; });
+const dz = $('dropzone');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+dz.addEventListener('drop',e=>{ if(e.dataTransfer?.files) addFiles(e.dataTransfer.files); });
+
+/* ---- main process ---- */
 async function run(){
-  const files = document.getElementById('fileInput').files;
-  const status = document.getElementById('status');
-  if(!files.length){ status.textContent="⚠ Please select at least one .xlsx file."; return; }
-  document.getElementById('goBtn').disabled = true;
-  status.textContent = "Processing…";
+  const status = $('status');
+  if(!FILES.length){ status.innerHTML='<span class="err">⚠ Add at least one .xlsx file first.</span>'; return; }
+  $('goBtn').disabled = true;
+  status.innerHTML = 'Processing…';
   ALL = []; bySection = {};
   let log = [];
 
-  for(const file of files){
+  for(const file of FILES){
     try{
       const buf = await file.arrayBuffer();
       const wb = XLSX.read(buf, {type:"array"});
@@ -173,111 +458,309 @@ async function run(){
         recs.forEach(rec => { rec.file = file.name; ALL.push(rec); });
         if(recs.length){ bySection[cfg.label] = (bySection[cfg.label]||[]).concat(recs); fileCount += recs.length; }
       }
-      log.push(`✓ ${file.name}: ${fileCount} rows`);
+      log.push(`<span class="ok">✓ ${esc(file.name)} — ${fileCount} rows</span>`);
     }catch(e){
-      log.push(`✗ ${file.name}: ${e.message}`);
+      log.push(`<span class="err">✗ ${esc(file.name)} — ${esc(e.message)}</span>`);
     }
   }
-  status.textContent = log.join("\n");
+  detectDupes();
+  status.innerHTML = log.join("\n");
   render();
-  document.getElementById('goBtn').disabled = false;
-  document.getElementById('dlBtn').disabled = ALL.length===0;
+  $('goBtn').disabled = false;
+  $('dlBtn').disabled = ALL.length===0;
+  $('resetBtn').style.display = ALL.length? 'inline-flex':'none';
+  if(ALL.length){ toast(`Processed ${fmt0(ALL.length)} records`); }
 }
 
-function fmt(n){ return n.toLocaleString('en-IN',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function resetAll(){
+  ALL=[]; bySection={}; FILES=[]; DUPES=[];
+  renderFileList();
+  $('status').innerHTML=''; $('cards').innerHTML=''; $('analyze-hint').innerHTML='';
+  $('dlBtn').disabled=true; $('resetBtn').style.display='none';
+  ['badge-parties','badge-records','badge-checks'].forEach(id=>$(id).style.display='none');
+  $('party-table').innerHTML='<div class="muted">Process files first — the party-wise ITC summary will appear here.</div>';
+  $('record-table').innerHTML='<div class="muted">Process files first — invoice-level records will appear here, section by section.</div>';
+  $('section-subtabs').innerHTML='';
+  $('checks-body').innerHTML='<div class="muted">Process files first — duplicate invoices and ITC alerts will appear here.</div>';
+  switchPane('analyze');
+}
 
-function partySummary(){
-  const m = {};
+/* ---- duplicate detection: same gstin + doc + rounded value ---- */
+function detectDupes(){
+  const map = {};
   for(const r of ALL){
+    if(!r.doc) continue;
+    const key = (r.gstin||'')+'|'+r.doc.toLowerCase()+'|'+Math.round(Math.abs(r.val));
+    (map[key]=map[key]||[]).push(r);
+  }
+  DUPES = Object.values(map).filter(g=>g.length>1);
+  // tag rows
+  const dupKeys = new Set();
+  DUPES.forEach(g=>g.forEach(r=>r._dup=true));
+}
+
+/* ============================================================
+   AGGREGATION
+   ============================================================ */
+function partySummary(rows){
+  const src = rows||ALL;
+  const m = {};
+  for(const r of src){
     const k = r.gstin + "|" + (r.name||"");
-    if(!m[k]) m[k] = {gstin:r.gstin, name:r.name, taxable:0, igst:0, cgst:0, sgst:0, cess:0, gst:0, count:0};
-    const o = m[k]; o.taxable+=r.taxable; o.igst+=r.igst; o.cgst+=r.cgst; o.sgst+=r.sgst; o.cess+=r.cess; o.gst+=r.gst; o.count++;
+    if(!m[k]) m[k] = {gstin:r.gstin, name:r.name, taxable:0, igst:0, cgst:0, sgst:0, cess:0, gst:0, elig:0, inelig:0, count:0};
+    const o = m[k];
+    o.taxable+=r.taxable; o.igst+=r.igst; o.cgst+=r.cgst; o.sgst+=r.sgst; o.cess+=r.cess; o.gst+=r.gst; o.count++;
+    if(r.eligible) o.elig+=r.gst; else o.inelig+=r.gst;
   }
   return Object.values(m).sort((a,b)=>b.taxable-a.taxable);
 }
+function totals(rows){
+  return rows.reduce((a,r)=>{
+    a.taxable+=r.taxable; a.igst+=r.igst; a.cgst+=r.cgst; a.sgst+=r.sgst; a.cess+=r.cess; a.gst+=r.gst; a.val+=r.val;
+    if(r.eligible) a.elig+=r.gst; else a.inelig+=r.gst;
+    return a;
+  },{taxable:0,igst:0,cgst:0,sgst:0,cess:0,gst:0,val:0,elig:0,inelig:0});
+}
+function rateBuckets(){
+  const s = new Set();
+  ALL.forEach(r=>{ if(r.rate>0) s.add(r.rate); });
+  return [...s].sort((a,b)=>a-b);
+}
 
-let activeTab = "Summary";
+/* ============================================================
+   RENDER — cards + badges + panes
+   ============================================================ */
 function render(){
-  const tabs = document.getElementById('tabs');
-  const cards = document.getElementById('cards');
-  if(!ALL.length){ tabs.innerHTML=""; cards.innerHTML=""; document.getElementById('panel').innerHTML='<div class="muted">No rows found.</div>'; return; }
-
-  const tTax = ALL.reduce((s,r)=>s+r.taxable,0);
-  const tGst = ALL.reduce((s,r)=>s+r.gst,0);
-  const parties = partySummary();
-  cards.innerHTML =
-    card("Total Records", ALL.length.toLocaleString('en-IN')) +
-    card("Suppliers/Parties", parties.length) +
-    card("Total Taxable (₹)", fmt(tTax)) +
-    card("Total GST (₹)", fmt(tGst));
-
-  const names = ["Summary", ...Object.keys(bySection)];
-  if(!names.includes(activeTab)) activeTab = "Summary";
-  tabs.innerHTML = names.map(n =>
-    `<div class="tab ${n===activeTab?'active':''}" onclick="setTab('${n.replace(/'/g,"\\'")}')">${n}${n!=='Summary'?` (${bySection[n].length})`:''}</div>`
-  ).join("");
-  renderPanel();
-}
-function card(k,v){ return `<div class="card"><div class="k">${k}</div><div class="v">${v}</div></div>`; }
-function setTab(n){ activeTab=n; render(); }
-
-function renderPanel(){
-  const p = document.getElementById('panel');
-  if(activeTab==="Summary"){
-    const rows = partySummary();
-    let h = `<table><thead><tr>
-      <th class="l">GSTIN</th><th class="l">Trade/Legal Name</th><th>Records</th>
-      <th>Taxable</th><th>IGST</th><th>CGST</th><th>SGST</th><th>Cess</th><th>Total GST</th></tr></thead><tbody>`;
-    for(const r of rows){
-      h += `<tr><td class="l">${r.gstin}</td><td class="l">${r.name||""}</td><td>${r.count}</td>
-        <td>${fmt(r.taxable)}</td><td>${fmt(r.igst)}</td><td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.cess)}</td><td>${fmt(r.gst)}</td></tr>`;
-    }
-    const t = rows.reduce((a,r)=>({tx:a.tx+r.taxable,i:a.i+r.igst,c:a.c+r.cgst,s:a.s+r.sgst,ce:a.ce+r.cess,g:a.g+r.gst}),{tx:0,i:0,c:0,s:0,ce:0,g:0});
-    h += `</tbody><tfoot><tr><td class="l" colspan="2">TOTAL</td><td>${rows.reduce((a,r)=>a+r.count,0)}</td>
-      <td>${fmt(t.tx)}</td><td>${fmt(t.i)}</td><td>${fmt(t.c)}</td><td>${fmt(t.s)}</td><td>${fmt(t.ce)}</td><td>${fmt(t.g)}</td></tr></tfoot></table>`;
-    p.innerHTML = h;
-  } else {
-    const rows = bySection[activeTab]||[];
-    let h = `<table><thead><tr>
-      <th class="l">GSTIN</th><th class="l">Name</th><th class="l">Doc No</th><th class="l">Date</th><th class="l">Type</th>
-      <th>Taxable</th><th>IGST</th><th>CGST</th><th>SGST</th><th>Cess</th><th>Total GST</th><th>Doc Value</th></tr></thead><tbody>`;
-    for(const r of rows){
-      h += `<tr><td class="l">${r.gstin}</td><td class="l">${r.name||""}</td><td class="l">${r.doc||""}</td>
-        <td class="l">${r.date||""}</td><td class="l">${r.type||""}</td>
-        <td>${fmt(r.taxable)}</td><td>${fmt(r.igst)}</td><td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.cess)}</td><td>${fmt(r.gst)}</td><td>${fmt(r.val)}</td></tr>`;
-    }
-    const t = rows.reduce((a,r)=>({tx:a.tx+r.taxable,g:a.g+r.gst,v:a.v+r.val}),{tx:0,g:0,v:0});
-    h += `</tbody><tfoot><tr><td class="l" colspan="5">TOTAL (${rows.length})</td>
-      <td>${fmt(t.tx)}</td><td colspan="4"></td><td>${fmt(t.g)}</td><td>${fmt(t.v)}</td></tr></tfoot></table>`;
-    p.innerHTML = h;
+  if(!ALL.length){
+    $('cards').innerHTML=''; $('analyze-hint').innerHTML='';
+    return;
   }
+  const t = totals(ALL);
+  const parties = partySummary();
+  const inelig = ALL.filter(r=>!r.eligible).length;
+  const rcm = ALL.filter(r=>r.rcm).length;
+
+  $('cards').innerHTML =
+    card("Records", fmt0(ALL.length)) +
+    card("Suppliers", fmt0(parties.length)) +
+    card("Taxable value", '₹'+fmt(t.taxable), 'acc') +
+    card("Eligible ITC", '₹'+fmt(t.elig), 'acc') +
+    (t.inelig ? card("Ineligible ITC", '₹'+fmt(t.inelig), 'warn') : '') +
+    (DUPES.length ? card("Duplicate groups", fmt0(DUPES.length), 'warn') : '') +
+    card("Total GST", '₹'+fmt(t.gst));
+
+  $('analyze-hint').innerHTML = `<div class="cta" style="margin-top:6px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span>Done. Open <b>Party-wise</b> for supplier ITC, <b>Records</b> for invoice detail, or <b>Checks</b> for duplicates &amp; alerts — then download the combined Excel.</span></div>`;
+
+  // badges
+  setBadge('badge-parties', parties.length);
+  setBadge('badge-records', ALL.length);
+  setBadge('badge-checks', DUPES.length + inelig + rcm);
+
+  // rate dropdown
+  const sel = $('recRate');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="all">All rates</option>' + rateBuckets().map(r=>`<option value="${r}">${r}%</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+
+  buildSectionSubtabs();
+  renderParties();
+  renderRecords();
+  renderChecks();
+}
+function card(k,v,cls){ return `<div class="card ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div></div>`; }
+function setBadge(id,n){ const el=$(id); if(n>0){ el.textContent=fmt0(n); el.style.display='inline-block'; } else el.style.display='none'; }
+
+/* ---- Party-wise table ---- */
+function renderParties(){
+  const q = norm($('partySearch').value);
+  let rows = partySummary();
+  if(q) rows = rows.filter(r=> norm(r.gstin).includes(q) || norm(r.name).includes(q));
+  const el = $('party-table');
+  if(!rows.length){ el.innerHTML='<div class="muted">No suppliers match your search.</div>'; return; }
+  let h = `<div class="tablewrap"><table><thead><tr>
+    <th class="l">Supplier GSTIN</th><th class="l">Trade / legal name</th><th>Inv.</th>
+    <th>Taxable</th><th>IGST</th><th>CGST</th><th>SGST</th><th>Cess</th>
+    <th>Total GST</th><th>Eligible</th><th>Ineligible</th></tr></thead><tbody>`;
+  for(const r of rows){
+    h += `<tr>
+      <td class="l">${esc(r.gstin)}</td><td class="l">${esc(r.name||'')}</td><td>${fmt0(r.count)}</td>
+      <td>${fmt(r.taxable)}</td><td>${fmt(r.igst)}</td><td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.cess)}</td>
+      <td>${fmt(r.gst)}</td><td class="pos">${fmt(r.elig)}</td><td class="${r.inelig?'neg':''}">${fmt(r.inelig)}</td></tr>`;
+  }
+  const t = totals(ALL.filter(r=>{ if(!q) return true; return norm(r.gstin).includes(q)||norm(r.name).includes(q); }));
+  const cnt = rows.reduce((a,r)=>a+r.count,0);
+  h += `</tbody><tfoot><tr><td class="l" colspan="2">TOTAL · ${fmt0(rows.length)} suppliers</td><td>${fmt0(cnt)}</td>
+    <td>${fmt(t.taxable)}</td><td>${fmt(t.igst)}</td><td>${fmt(t.cgst)}</td><td>${fmt(t.sgst)}</td><td>${fmt(t.cess)}</td>
+    <td>${fmt(t.gst)}</td><td class="pos">${fmt(t.elig)}</td><td class="${t.inelig?'neg':''}">${fmt(t.inelig)}</td></tr></tfoot></table></div>`;
+  el.innerHTML = h;
 }
 
+/* ---- Records: section sub-tabs + search + rate filter ---- */
+let activeSection = null;
+function buildSectionSubtabs(){
+  const keys = Object.keys(bySection);
+  if(!keys.includes(activeSection)) activeSection = keys[0]||null;
+  const el = $('section-subtabs');
+  el.innerHTML = keys.map(k=>`<button class="subtab ${k===activeSection?'active':''}" data-sec="${esc(k)}">${esc(k)}<span class="n">${fmt0(bySection[k].length)}</span></button>`).join('');
+  el.querySelectorAll('.subtab').forEach(b=>b.onclick=()=>{ activeSection=b.dataset.sec; buildSectionSubtabs(); renderRecords(); });
+}
+function renderRecords(){
+  const el = $('record-table');
+  if(!activeSection || !bySection[activeSection]){ el.innerHTML='<div class="muted">No records.</div>'; return; }
+  const q = norm($('recSearch').value);
+  const rateSel = $('recRate').value;
+  let rows = bySection[activeSection];
+  if(q) rows = rows.filter(r=> norm(r.gstin).includes(q)||norm(r.name).includes(q)||norm(r.doc).includes(q));
+  if(rateSel!=='all') rows = rows.filter(r=> String(r.rate)===rateSel);
+  if(!rows.length){ el.innerHTML='<div class="muted">No records match your filters in this section.</div>'; return; }
+
+  let h = `<div class="tablewrap"><table><thead><tr>
+    <th class="l">GSTIN</th><th class="l">Name</th><th class="l">Doc no</th><th class="l">Date</th>
+    <th class="l">Type</th><th>Rate</th><th class="l">ITC</th>
+    <th>Taxable</th><th>IGST</th><th>CGST</th><th>SGST</th><th>Cess</th><th>Total GST</th><th>Doc value</th></tr></thead><tbody>`;
+  for(const r of rows){
+    const itcPill = r.eligible
+      ? '<span class="pill elig">Eligible</span>'
+      : '<span class="pill inelig">Ineligible</span>';
+    const rcmPill = r.rcm ? ' <span class="pill rcm">RCM</span>' : '';
+    const dup = r._dup ? '<span class="flagdot dup" title="Possible duplicate"></span>' : '';
+    h += `<tr>
+      <td class="l">${dup}${esc(r.gstin)}</td><td class="l">${esc(r.name||'')}</td>
+      <td class="l">${esc(r.doc||'')}</td><td class="l">${esc(r.date||'')}</td>
+      <td class="l">${esc(r.type||'')}</td><td>${r.rate?r.rate+'%':'—'}</td>
+      <td class="l">${itcPill}${rcmPill}</td>
+      <td>${fmt(r.taxable)}</td><td>${fmt(r.igst)}</td><td>${fmt(r.cgst)}</td><td>${fmt(r.sgst)}</td><td>${fmt(r.cess)}</td>
+      <td>${fmt(r.gst)}</td><td>${fmt(r.val)}</td></tr>`;
+  }
+  const t = totals(rows);
+  h += `</tbody><tfoot><tr><td class="l" colspan="7">TOTAL · ${fmt0(rows.length)} records</td>
+    <td>${fmt(t.taxable)}</td><td>${fmt(t.igst)}</td><td>${fmt(t.cgst)}</td><td>${fmt(t.sgst)}</td><td>${fmt(t.cess)}</td>
+    <td>${fmt(t.gst)}</td><td>${fmt(t.val)}</td></tr></tfoot></table></div>`;
+  el.innerHTML = h;
+}
+
+/* ---- Checks: duplicates + ineligible + RCM ---- */
+function renderChecks(){
+  const el = $('checks-body');
+  const inelig = ALL.filter(r=>!r.eligible);
+  const rcm = ALL.filter(r=>r.rcm);
+  let h = '';
+
+  // summary line
+  h += `<div class="cards" style="margin-top:0">
+    ${card('Duplicate groups', fmt0(DUPES.length), DUPES.length?'warn':'')}
+    ${card('Ineligible entries', fmt0(inelig.length), inelig.length?'warn':'')}
+    ${card('Reverse charge (RCM)', fmt0(rcm.length), rcm.length?'warn':'')}
+  </div>`;
+
+  // duplicates
+  h += `<div class="h-sec" style="font-size:1.05rem">Possible duplicate invoices</div>`;
+  if(!DUPES.length){
+    h += `<div class="note" style="margin-top:0">No duplicates found — no supplier + invoice no + value repeats across your files.</div>`;
+  } else {
+    h += `<div class="note" style="margin-top:0;margin-bottom:12px">Same <b>GSTIN + invoice number + value</b> appears more than once. Common when a month overlaps between two downloads — verify before claiming ITC twice.</div>`;
+    h += `<div class="tablewrap"><table><thead><tr>
+      <th class="l">GSTIN</th><th class="l">Name</th><th class="l">Doc no</th><th class="l">Section(s)</th><th class="l">File(s)</th><th>Times</th><th>Doc value</th><th>Total GST</th></tr></thead><tbody>`;
+    for(const g of DUPES){
+      const r=g[0];
+      const secs=[...new Set(g.map(x=>x.section))].join(', ');
+      const files=[...new Set(g.map(x=>x.file))].map(esc).join(', ');
+      h += `<tr><td class="l"><span class="flagdot dup"></span>${esc(r.gstin)}</td><td class="l">${esc(r.name||'')}</td>
+        <td class="l">${esc(r.doc||'')}</td><td class="l"><span class="pill sec">${esc(secs)}</span></td><td class="l">${files}</td>
+        <td>${g.length}</td><td>${fmt(r.val)}</td><td>${fmt(r.gst)}</td></tr>`;
+    }
+    h += `</tbody></table></div>`;
+  }
+
+  // ineligible
+  h += `<div class="h-sec" style="font-size:1.05rem">Ineligible / reversed ITC</div>`;
+  if(!inelig.length){
+    h += `<div class="note" style="margin-top:0">No entries are flagged ineligible in the portal file.</div>`;
+  } else {
+    const it = totals(inelig);
+    h += `<div class="note" style="margin-top:0;margin-bottom:12px">These carry <b>₹${fmt(it.gst)}</b> of GST the portal marked <b>not available</b> as ITC (or reported under ITC-reversal sections). Exclude from your GSTR-3B claim.</div>`;
+    h += ineligTable(inelig);
+  }
+
+  // RCM
+  if(rcm.length){
+    h += `<div class="h-sec" style="font-size:1.05rem">Reverse-charge supplies</div>`;
+    h += `<div class="note" style="margin-top:0;margin-bottom:12px">Supplier marked these as <b>reverse charge</b>. You pay this GST yourself and claim it separately — it is not auto-credit from the vendor.</div>`;
+    h += ineligTable(rcm);
+  }
+
+  el.innerHTML = h;
+}
+function ineligTable(rows){
+  let h = `<div class="tablewrap"><table><thead><tr>
+    <th class="l">GSTIN</th><th class="l">Name</th><th class="l">Doc no</th><th class="l">Section</th><th class="l">ITC flag</th>
+    <th>Taxable</th><th>Total GST</th></tr></thead><tbody>`;
+  for(const r of rows.slice(0,500)){
+    h += `<tr><td class="l">${esc(r.gstin)}</td><td class="l">${esc(r.name||'')}</td><td class="l">${esc(r.doc||'')}</td>
+      <td class="l"><span class="pill sec">${esc(r.section)}</span></td>
+      <td class="l">${r.rcm?'<span class="pill rcm">RCM</span>':'<span class="pill inelig">'+esc(r.itcFlag||'No')+'</span>'}</td>
+      <td>${fmt(r.taxable)}</td><td>${fmt(r.gst)}</td></tr>`;
+  }
+  const t=totals(rows);
+  h += `</tbody><tfoot><tr><td class="l" colspan="5">TOTAL · ${fmt0(rows.length)}</td><td>${fmt(t.taxable)}</td><td>${fmt(t.gst)}</td></tr></tfoot></table></div>`;
+  return h;
+}
+
+/* ============================================================
+   EXCEL EXPORT
+   ============================================================ */
 function downloadExcel(){
   if(!ALL.length) return;
   const wb = XLSX.utils.book_new();
-  // Summary sheet
+
   const sum = partySummary().map(r=>({
-    GSTIN:r.gstin, "Trade/Legal Name":r.name, Records:r.count,
-    Taxable:r.taxable, IGST:r.igst, CGST:r.cgst, SGST:r.sgst, Cess:r.cess, "Total GST":r.gst
+    "Supplier GSTIN":r.gstin, "Trade/Legal Name":r.name, "Invoices":r.count,
+    Taxable:r.taxable, IGST:r.igst, CGST:r.cgst, SGST:r.sgst, Cess:r.cess,
+    "Total GST":r.gst, "Eligible ITC":r.elig, "Ineligible ITC":r.inelig
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sum), "Party Summary");
-  // All invoices
+
   const all = ALL.map(r=>({
     Section:r.section, File:r.file, GSTIN:r.gstin, Name:r.name, "Doc No":r.doc, Date:r.date, Type:r.type,
+    "POS":r.pos, "Rate %":r.rate, "ITC":r.eligible?"Eligible":"Ineligible", "RCM":r.rcm?"Yes":"No", "Duplicate":r._dup?"Yes":"",
     Taxable:r.taxable, IGST:r.igst, CGST:r.cgst, SGST:r.sgst, Cess:r.cess, "Total GST":r.gst, "Doc Value":r.val
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(all), "All Records");
-  // Per-section sheets
+
+  // Checks sheet
+  const checks = [];
+  DUPES.forEach(g=>{ const r=g[0]; checks.push({Type:"Duplicate", GSTIN:r.gstin, Name:r.name, "Doc No":r.doc, Detail:`${g.length}× across ${[...new Set(g.map(x=>x.file))].join(' / ')}`, "Doc Value":r.val, "Total GST":r.gst}); });
+  ALL.filter(r=>!r.eligible).forEach(r=>checks.push({Type:"Ineligible ITC", GSTIN:r.gstin, Name:r.name, "Doc No":r.doc, Detail:r.itcFlag||r.section, "Doc Value":r.val, "Total GST":r.gst}));
+  ALL.filter(r=>r.rcm).forEach(r=>checks.push({Type:"Reverse Charge", GSTIN:r.gstin, Name:r.name, "Doc No":r.doc, Detail:r.section, "Doc Value":r.val, "Total GST":r.gst}));
+  if(checks.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(checks), "Checks");
+
   for(const sec in bySection){
     const data = bySection[sec].map(r=>({
-      GSTIN:r.gstin, Name:r.name, "Doc No":r.doc, Date:r.date, Type:r.type,
+      GSTIN:r.gstin, Name:r.name, "Doc No":r.doc, Date:r.date, Type:r.type, "Rate %":r.rate, "ITC":r.eligible?"Eligible":"Ineligible",
       Taxable:r.taxable, IGST:r.igst, CGST:r.cgst, SGST:r.sgst, Cess:r.cess, "Total GST":r.gst, "Doc Value":r.val
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), sec.substring(0,31));
   }
   XLSX.writeFile(wb, "GSTR2B_Combined_Analysis.xlsx");
+  toast('Excel downloaded');
 }
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+function switchPane(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.pane===name));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.id==='pane-'+name));
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchPane(t.dataset.pane));
+$('goBtn').onclick = run;
+$('dlBtn').onclick = downloadExcel;
+$('resetBtn').onclick = resetAll;
+$('partySearch').addEventListener('input', renderParties);
+$('recSearch').addEventListener('input', renderRecords);
+$('recRate').addEventListener('change', renderRecords);
 </script>
 </body>
 </html>

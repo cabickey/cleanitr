@@ -3,399 +3,305 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GSTR-3B Summary Maker — Clean ITR</title>
+<meta name="description" content="Free GSTR-3B Summary Generator — upload your monthly GSTR-3B PDFs and get a full-year consolidated summary: outward supplies, ITC, RCM, tax vs cash payable, late-fee & interest compliance, plus CSV/Excel/PDF export. 100% in your browser. By CleanITR.">
+<title>GSTR-3B Summary Generator — Annual Consolidation | CleanITR</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230e7c66'/%3E%3Cpath d='M18 8l-7.5 8L6 12' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://cleanitr.com/tools/gstr3b-summary-generator.html">
+<meta property="og:title" content="GSTR-3B Summary Generator — CleanITR">
+<meta property="og:description" content="Consolidate a year of GSTR-3B PDFs into one summary: outward, ITC, RCM, tax-vs-cash and compliance — with Excel/CSV/PDF export.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/tools/_calc.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
+  /* ===== Fallback tokens (site's _calc.css wins where it defines the same names) ===== */
   :root{
-    --ink:#10221b;
-    --paper:#f7f4ec;
-    --card:#ffffff;
-    --line:#d9d2c4;
-    --accent:#0b6b53;
-    --accent-deep:#084c3b;
-    --gold:#b8893a;
-    --muted:#6b6657;
-    --neg:#b5341f;
-    --stripe:#f3efe5;
-    --head:#0b3a2e;
-    --shadow:0 18px 50px -24px rgba(8,40,30,.45);
+    --paper:#f4f6f5; --paper-2:#ffffff; --line:#e2e8e5;
+    --ink:#0f2a2e; --ink-soft:#5c6b68;
+    --teal:#0e7c66; --teal-deep:#0a5c4b; --teal-light:#e3f2ec;
+    --gold:#b8860b; --gold-light:#fbf3dd;
+    --neg:#b23b3b;
+    --r:16px; --shadow:0 1px 2px rgba(15,42,46,.05),0 8px 24px rgba(15,42,46,.04);
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{
-    font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Georgia",serif;
-    background:
-      radial-gradient(1200px 500px at 85% -10%,#e9f0e8 0%,transparent 60%),
-      radial-gradient(900px 500px at -10% 10%,#efe7d6 0%,transparent 55%),
-      var(--paper);
-    color:var(--ink);
-    line-height:1.5;
-    min-height:100vh;
-    padding:0 0 80px;
-  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',system-ui,Arial,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:var(--teal-deep);text-decoration:none}
+  a:hover{text-decoration:underline}
 
-  /* ---------- TOP BAR ---------- */
-  .topbar{
-    position:sticky;top:0;z-index:50;
-    background:linear-gradient(180deg,rgba(11,58,46,.97),rgba(8,40,30,.97));
-    color:#f4efe4;
-    border-bottom:2px solid var(--gold);
-    box-shadow:0 10px 30px -16px rgba(0,0,0,.6);
-  }
-  .topbar-inner{
-    max-width:1180px;margin:0 auto;padding:14px 26px;
-    display:flex;align-items:center;gap:18px;flex-wrap:wrap;
-  }
-  .brand{display:flex;align-items:baseline;gap:12px;margin-right:auto}
-  .brand .mark{
-    font-family:"Georgia",serif;font-size:1.45rem;font-weight:700;letter-spacing:.5px;
-  }
-  .brand .mark span{color:var(--gold)}
-  .brand .sub{font-size:.72rem;letter-spacing:3px;text-transform:uppercase;color:#bcd3c8}
-  .btn{
-    font-family:inherit;font-size:.82rem;letter-spacing:.4px;
-    border:1px solid rgba(255,255,255,.35);
-    background:rgba(255,255,255,.06);color:#f4efe4;
-    padding:9px 16px;border-radius:2px;cursor:pointer;
-    transition:.18s ease;text-transform:uppercase;font-weight:600;
-  }
-  .btn:hover{background:var(--gold);border-color:var(--gold);color:#2a1c06;transform:translateY(-1px)}
-  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-  .btn.primary{background:var(--gold);border-color:var(--gold);color:#2a1c06}
-  .btn.primary:hover{background:#cf9c46}
+  header{background:var(--paper-2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+  .nav{max-width:1080px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .brand{display:flex;align-items:center;gap:11px}
+  .logo-mark{width:34px;height:34px;border-radius:9px;background:var(--teal);display:grid;place-items:center;flex-shrink:0}
+  .logo-mark svg{width:19px;height:19px}
+  .brand-text .name{font-family:'Sora',sans-serif;font-weight:800;font-size:1.02rem;letter-spacing:-.01em;line-height:1;color:var(--ink)}
+  .brand-text .name span{color:var(--teal)}
+  .brand-text .sub{font-size:.66rem;color:var(--ink-soft);margin-top:2px;letter-spacing:.02em}
+  .back{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;color:var(--ink-soft)}
+  .back svg{width:15px;height:15px}
+  .back:hover{color:var(--teal-deep);text-decoration:none}
+  footer{max-width:1080px;margin:30px auto 40px;padding:0 20px;font-size:.8rem;color:var(--ink-soft);text-align:center}
 
-  /* ---------- WRAP ---------- */
-  .wrap{max-width:1180px;margin:0 auto;padding:34px 26px 0}
+  .page{max-width:1080px;margin:0 auto;padding:26px 20px 0}
+  .eyebrow{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:5px 11px;border-radius:999px;margin-bottom:12px}
+  h1{font-family:'Sora',sans-serif;font-weight:800;font-size:1.85rem;letter-spacing:-.02em;margin:0 0 8px;line-height:1.1}
+  .lead{font-size:.98rem;color:var(--ink-soft);max-width:72ch;margin:0 0 22px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-  /* ---------- UPLOAD / DROPZONE ---------- */
-  .intake{
-    background:var(--card);border:1px solid var(--line);border-radius:6px;
-    box-shadow:var(--shadow);overflow:hidden;margin-bottom:30px;
-  }
-  .intake-head{
-    background:linear-gradient(90deg,#0b3a2e,#0b6b53);
-    color:#f4efe4;padding:16px 24px;display:flex;align-items:center;gap:14px;
-  }
-  .intake-head h1{font-size:1.15rem;font-weight:700;letter-spacing:.4px}
-  .intake-head .tag{
-    margin-left:auto;font-size:.66rem;letter-spacing:2px;text-transform:uppercase;
-    background:rgba(255,255,255,.14);padding:5px 11px;border-radius:2px;color:#cfe3da;
-  }
-  .intake-body{padding:26px 24px}
-  .drop{
-    border:2px dashed var(--accent);border-radius:6px;
-    background:linear-gradient(180deg,#fbfdfb,#f3f8f4);
-    padding:38px 24px;text-align:center;cursor:pointer;transition:.18s ease;
-  }
-  .drop:hover,.drop.over{background:#eaf3ee;border-color:var(--accent-deep)}
-  .drop .ic{font-size:2.4rem;color:var(--accent);margin-bottom:8px}
-  .drop h3{font-size:1.05rem;margin-bottom:5px}
-  .drop p{color:var(--muted);font-size:.88rem;font-family:Georgia,serif}
-  .drop .hint{margin-top:10px;font-size:.78rem;color:var(--gold);letter-spacing:.5px}
-  input[type=file]{display:none}
+  .tabs{display:flex;gap:6px;background:var(--paper-2);border:1px solid var(--line);border-radius:13px;padding:5px;margin-bottom:22px;box-shadow:var(--shadow);overflow-x:auto}
+  .tab{flex:1 0 auto;padding:11px 14px;border:0;background:transparent;font:inherit;font-weight:700;font-size:.9rem;color:var(--ink-soft);border-radius:9px;cursor:pointer;transition:.18s;display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap}
+  .tab svg{width:16px;height:16px;flex-shrink:0}
+  .tab.active{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(14,124,102,.28)}
+  .tab:not(.active):hover{background:var(--teal-light);color:var(--teal-deep)}
+  .tab .badge{background:rgba(255,255,255,.25);border-radius:999px;padding:1px 7px;font-size:.7rem;font-weight:800}
+  .tab:not(.active) .badge{background:var(--teal-light);color:var(--teal-deep)}
 
-  .filelist{margin-top:18px;display:flex;flex-direction:column;gap:8px}
-  .filerow{
-    display:flex;align-items:center;gap:12px;font-size:.86rem;
-    background:var(--stripe);border:1px solid var(--line);border-radius:4px;padding:9px 14px;
-  }
-  .filerow .nm{font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .filerow .st{font-size:.74rem;letter-spacing:.5px;text-transform:uppercase}
-  .st.ok{color:var(--accent)}
-  .st.warn{color:var(--gold)}
-  .st.err{color:var(--neg)}
-  .st.busy{color:var(--muted)}
+  .pane{display:none}
+  .pane.active{display:block;animation:fadeUp .35s ease}
 
-  .actions{margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-  .btn-dark{
-    background:var(--accent);color:#fff;border:1px solid var(--accent-deep);
-    padding:10px 20px;border-radius:3px;font-weight:700;letter-spacing:.5px;
-    font-family:inherit;font-size:.85rem;cursor:pointer;text-transform:uppercase;transition:.18s;
-  }
-  .btn-dark:hover{background:var(--accent-deep);transform:translateY(-1px)}
-  .btn-dark:disabled{opacity:.45;cursor:not-allowed;transform:none}
-  .btn-ghost{
-    background:transparent;color:var(--accent-deep);border:1px solid var(--accent);
-    padding:10px 18px;border-radius:3px;font-weight:600;letter-spacing:.4px;
-    font-family:inherit;font-size:.82rem;cursor:pointer;text-transform:uppercase;transition:.18s;
-  }
-  .btn-ghost:hover{background:var(--accent);color:#fff}
+  .uploadbox{background:var(--paper-2);border:1.5px dashed var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:30px 24px;text-align:center;transition:.18s}
+  .uploadbox.drag{border-color:var(--teal);background:var(--teal-light)}
+  .uploadbox .ic{width:46px;height:46px;margin:0 auto 12px;border-radius:12px;background:var(--teal-light);display:grid;place-items:center}
+  .uploadbox .ic svg{width:24px;height:24px;color:var(--teal)}
+  .uploadbox h3{font-family:'Sora',sans-serif;font-size:1.05rem;margin:0 0 5px}
+  .uploadbox p{font-size:.88rem;color:var(--ink-soft);margin:0 0 16px}
+  .filepick{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;font:inherit;font-weight:700;font-size:.9rem;padding:11px 20px;border-radius:11px;cursor:pointer;border:0;transition:.15s}
+  .filepick:hover{background:var(--teal-deep)}
+  .filepick svg{width:16px;height:16px}
+  #fileInput{display:none}
+  .filelist{margin-top:16px;display:flex;flex-direction:column;gap:7px;text-align:left}
+  .fileitem{display:flex;align-items:center;gap:9px;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:.84rem}
+  .fileitem>svg{width:15px;height:15px;color:var(--teal);flex-shrink:0}
+  .fileitem .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fileitem .st{font-size:.72rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:2px 8px;border-radius:6px}
+  .st.ok{background:var(--teal-light);color:var(--teal-deep)}
+  .st.warn{background:var(--gold-light);color:var(--gold)}
+  .st.err{background:#f6dede;color:var(--neg)}
+  .st.busy{background:#eef1f0;color:var(--ink-soft)}
+  .fileitem .rm{border:0;background:transparent;color:var(--ink-soft);cursor:pointer;font-size:1rem;line-height:1;padding:2px 6px;border-radius:6px}
+  .fileitem .rm:hover{background:#f6dede;color:var(--neg)}
 
-  .note{
-    margin-top:14px;font-size:.78rem;color:var(--muted);
-    font-family:Georgia,serif;line-height:1.6;
-    border-left:3px solid var(--gold);padding-left:12px;
-  }
+  .actionrow{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 0;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;border:0;font:inherit;font-weight:700;font-size:.9rem;padding:11px 20px;border-radius:11px;cursor:pointer;transition:.15s}
+  .btn:hover{background:var(--teal-deep)}
+  .btn:disabled{background:#a7b3b0;cursor:not-allowed}
+  .btn.sec{background:var(--paper-2);color:var(--teal-deep);border:1.5px solid var(--teal)}
+  .btn.sec:hover{background:var(--teal-light)}
+  .btn.sec:disabled{color:#a7b3b0;border-color:var(--line);background:var(--paper-2)}
+  .btn svg{width:16px;height:16px}
 
-  .msg{margin-top:14px;padding:11px 16px;border-radius:4px;font-size:.85rem;display:none}
+  .msg{margin-top:16px;padding:12px 16px;border-radius:11px;font-size:.86rem;display:none;line-height:1.55}
   .msg.show{display:block}
-  .msg.error{background:#fbe9e6;color:var(--neg);border:1px solid #e6b5ac}
-  .msg.info{background:#e8f1ec;color:var(--accent-deep);border:1px solid #b6d4c6}
+  .msg.error{background:#f9e7e4;color:var(--neg);border:1px solid #e6b5ac}
+  .msg.info{background:var(--teal-light);color:var(--teal-deep);border:1px solid #b6d4c6}
 
-  /* ---------- REPORT ---------- */
-  #report{display:none}
-  #report.show{display:block}
-  .report-head{text-align:center;margin:8px 0 30px;position:relative}
-  .report-head .crest{font-size:.7rem;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-  .report-head h2{
-    font-size:2rem;font-weight:700;color:var(--head);letter-spacing:.5px;line-height:1.15;
-  }
-  .report-head .rule{
-    width:120px;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
-    margin:14px auto 0;
-  }
-  .report-meta{
-    display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:14px;
-    font-size:.8rem;color:var(--muted);font-family:Georgia,serif;
-  }
-  .report-meta b{color:var(--ink)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:22px 0}
+  .card{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:15px 17px;box-shadow:var(--shadow)}
+  .card .k{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft)}
+  .card .v{font-family:'Sora',sans-serif;font-size:1.4rem;font-weight:800;color:var(--ink);margin-top:5px;letter-spacing:-.01em;line-height:1.1}
+  .card.acc .v{color:var(--teal-deep)}
+  .card.warn{border-color:#f0d9a8;background:var(--gold-light)}
+  .card.warn .v{color:var(--gold)}
+  .card.neg .v{color:var(--neg)}
+  .card .sub2{font-size:.72rem;color:var(--ink-soft);margin-top:3px}
 
-  section.block{
-    background:var(--card);border:1px solid var(--line);border-radius:6px;
-    box-shadow:var(--shadow);margin-bottom:28px;overflow:hidden;
-    page-break-inside:avoid;
-  }
-  .block-head{
-    display:flex;align-items:center;gap:14px;
-    background:linear-gradient(90deg,#0b3a2e,#0d5742);
-    color:#f4efe4;padding:13px 22px;
-  }
-  .block-head .num{
-    width:30px;height:30px;border-radius:50%;background:var(--gold);color:#2a1c06;
-    display:grid;place-items:center;font-weight:700;font-size:.95rem;flex-shrink:0;
-  }
-  .block-head h3{font-size:1.05rem;font-weight:700;letter-spacing:.3px}
-  .block-head .cap{margin-left:auto;font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:#bcd3c8}
+  /* report blocks */
+  .block{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+  .block-head{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);background:var(--paper)}
+  .block-head .num{width:26px;height:26px;border-radius:8px;background:var(--teal);color:#fff;display:grid;place-items:center;font-family:'Sora',sans-serif;font-weight:800;font-size:.82rem;flex-shrink:0}
+  .block-head h3{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;margin:0}
+  .block-head .cap{margin-left:auto;font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);background:var(--teal-light);padding:3px 9px;border-radius:6px}
 
   .tbl-scroll{overflow-x:auto}
-  table{border-collapse:collapse;width:100%;font-size:.88rem}
-  thead th{
-    position:sticky;top:0;z-index:2;
-    background:var(--head);color:#f4efe4;font-weight:600;
-    padding:11px 14px;text-align:right;white-space:nowrap;
-    border-bottom:2px solid var(--gold);letter-spacing:.3px;
-    font-family:Georgia,serif;
-  }
-  thead th:first-child{text-align:left}
-  tbody td{
-    padding:9px 14px;text-align:right;border-bottom:1px solid var(--line);
-    font-variant-numeric:tabular-nums;white-space:nowrap;
-  }
-  tbody td:first-child{text-align:left;font-weight:600;color:var(--ink);font-family:Georgia,serif}
-  tbody tr:nth-child(even){background:var(--stripe)}
-  tbody tr:hover{background:#eef5f0}
-  td.na{color:var(--muted);font-style:italic}
+  table{border-collapse:separate;border-spacing:0;width:100%;font-size:.82rem}
+  th,td{padding:9px 13px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  th{background:var(--paper-2);color:var(--ink);position:sticky;top:0;font-weight:700;font-size:.7rem;letter-spacing:.03em;text-transform:uppercase;z-index:2}
+  th:first-child,td:first-child{text-align:left}
+  tbody td:first-child{font-weight:600}
+  tbody tr:hover td{background:var(--teal-light)}
+  td.na{color:var(--ink-soft);font-style:italic}
   td.neg{color:var(--neg)}
-  tfoot td{
-    padding:11px 14px;text-align:right;font-weight:700;
-    background:#eef3ee;border-top:2px solid var(--accent);color:var(--accent-deep);
-    font-variant-numeric:tabular-nums;
-  }
-  tfoot td:first-child{text-align:left;text-transform:uppercase;letter-spacing:.5px;font-size:.8rem}
+  td.pos{color:var(--teal-deep)}
+  tfoot td{font-weight:800;background:var(--paper);border-top:2px solid var(--teal);color:var(--teal-deep)}
+  tfoot td:first-child{text-transform:uppercase;letter-spacing:.04em;font-size:.74rem}
+  .calc-final td{background:var(--gold-light);color:var(--teal-deep);font-weight:800}
+  .rowlabel{font-weight:600}
+  .edit-hint{font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);background:var(--gold-light);padding:1px 6px;border-radius:5px;margin-left:7px}
 
-  .calc-row-final td{background:#f4ecd9;color:var(--accent-deep);font-weight:700}
-  .summary-particular{text-align:left;font-weight:600;font-family:Georgia,serif}
+  td.editable{background:var(--gold-light)}
+  .edit-in{width:100%;border:1px dashed var(--gold);background:#fffdf5;font-family:inherit;font-size:.82rem;text-align:right;padding:5px 7px;border-radius:6px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .edit-in:focus{outline:none;border:1px solid var(--teal);background:#fff;box-shadow:0 0 0 2px rgba(14,124,102,.15)}
 
-  /* editable cells */
-  .edit-in{
-    width:100%;border:1px dashed var(--gold);background:#fffdf5;
-    font-family:inherit;font-size:.88rem;text-align:right;
-    padding:5px 7px;border-radius:3px;color:var(--ink);
-    font-variant-numeric:tabular-nums;
-  }
-  .edit-in:focus{outline:none;border:1px solid var(--accent);background:#fff;box-shadow:0 0 0 2px rgba(11,107,83,.15)}
-  td.editable{background:#fffaf0}
-  tbody tr:nth-child(even) td.editable{background:#fdf6e8}
-  .edit-hint{
-    font-size:.66rem;letter-spacing:1px;text-transform:uppercase;color:var(--gold);
-    margin-left:8px;font-family:Georgia,serif;font-weight:600;
-  }
-  @media print{
-    .edit-in{border:none !important;background:transparent !important;box-shadow:none !important;
-             padding:0 !important;text-align:right;-webkit-appearance:none;appearance:none}
-    .edit-hint{display:none}
-    td.editable,tbody tr:nth-child(even) td.editable{background:transparent !important}
-  }
+  .pill{display:inline-block;font-size:.66rem;font-weight:800;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.04em}
+  .pill.ok{background:var(--teal-light);color:var(--teal-deep)}
+  .pill.late{background:#f6dede;color:var(--neg)}
+  .pill.rcm{background:var(--gold-light);color:var(--gold)}
 
-  footer.legal{
-    max-width:1180px;margin:30px auto 0;padding:0 26px;
-    font-size:.74rem;color:var(--muted);font-family:Georgia,serif;text-align:center;line-height:1.7;
-  }
+  .muted{color:var(--ink-soft);font-style:italic;padding:34px;text-align:center}
 
-  /* ---------- PRINT ---------- */
+  .guide{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:22px}
+  .gcard{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .gcard .gn{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;font-weight:800;color:var(--teal);letter-spacing:.08em}
+  .gcard h4{font-family:'Sora',sans-serif;font-size:.98rem;margin:6px 0 7px}
+  .gcard p{font-size:.86rem;color:var(--ink-soft);margin:0;line-height:1.5}
+  .gcard p b{color:var(--ink)}
+  .feat{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+  .feat li{display:flex;gap:10px;align-items:flex-start;background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:.87rem;color:var(--ink)}
+  .feat li svg{width:17px;height:17px;color:var(--teal);flex-shrink:0;margin-top:2px}
+  .feat li b{display:block;margin-bottom:1px}
+  .feat li span{color:var(--ink-soft);font-size:.82rem}
+  .steps-note{background:var(--gold-light);border:1px solid #f0d9a8;border-radius:12px;padding:13px 16px;font-size:.85rem;color:var(--ink);display:flex;gap:10px;align-items:flex-start;margin-top:16px}
+  .steps-note svg{width:16px;height:16px;color:var(--gold);flex-shrink:0;margin-top:2px}
+  .h-sec{font-family:'Sora',sans-serif;font-size:1.15rem;margin:26px 0 12px}
+  .h-sec:first-child{margin-top:0}
+
+  .cta{margin:26px 0 0;background:var(--teal-light);border:1px solid #c5e5da;border-radius:13px;padding:15px 18px;display:flex;gap:12px;align-items:center;font-size:.9rem;color:var(--teal-deep)}
+  .cta svg{width:22px;height:22px;flex-shrink:0}
+  .cta a{font-weight:700}
+  .note{margin-top:18px;font-size:.76rem;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;line-height:1.6}
+  .note b{color:var(--ink)}
+  .subhead{font-size:.86rem;color:var(--ink-soft);margin:0 0 14px;line-height:1.55}
+  .subhead b{color:var(--ink)}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 20px;border-radius:11px;font-size:.86rem;font-weight:600;opacity:0;pointer-events:none;transition:.28s;z-index:200;box-shadow:0 10px 30px rgba(15,42,46,.3)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* print: only the report area, clean */
   @media print{
     @page{size:A4 landscape;margin:12mm}
-    body{background:#fff;padding:0}
-    .topbar,.intake,.no-print,footer.legal .screen-only{display:none !important}
-    .wrap{max-width:none;padding:0;margin:0}
-    #report{display:block !important}
-    section.block{box-shadow:none;border:1px solid #999;break-inside:avoid;margin-bottom:14px}
-    .block-head{background:#0b3a2e !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    thead th{background:#0b3a2e !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    tbody tr:nth-child(even){background:#f0f0f0 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    tfoot td{background:#e7eee9 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .report-head h2{font-size:1.5rem}
-    .block-head .num{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    header,footer,.tabs,.uploadbox,.actionrow,#status,.cta,.note,.eyebrow,.lead,.tbar,#analyze-hint,.msg{display:none !important}
+    body{background:#fff}
+    .page{max-width:none;padding:0}
+    .pane{display:block !important}
+    #pane-analyze,#pane-guide{display:none !important}
+    .block{box-shadow:none;border:1px solid #999;break-inside:avoid;margin-bottom:14px}
+    .edit-in{border:none !important;background:transparent !important;box-shadow:none !important;padding:0 !important}
+    .edit-hint{display:none}
+    td.editable{background:transparent !important}
+    h1{display:none}
   }
 
-  @media(max-width:640px){
-    .brand .sub{display:none}
-    .report-head h2{font-size:1.5rem}
-    .topbar-inner{padding:12px 16px}
-    .wrap{padding:20px 14px 0}
+  @media(max-width:600px){
+    h1{font-size:1.5rem}
+    .tab span{display:none}
+    .tab{flex:1 0 auto;padding:11px}
+    .page{padding:20px 14px 0}
   }
 </style>
 </head>
 <body>
-
-<!-- ===== TOP BAR ===== -->
-<div class="topbar no-print">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="mark">GSTR&middot;3B <span>Studio</span></div>
-      <div class="sub">Summary Generator</div>
-    </div>
-    <button class="btn" id="btnPrint" disabled>🖨 Print / Save PDF</button>
-    <button class="btn" id="btnCsv" disabled>⇩ CSV</button>
-    <button class="btn" id="btnXls" disabled>⇩ Excel</button>
-    <button class="btn primary" id="btnReset" disabled>↺ Reset</button>
+<header>
+  <div class="nav">
+    <a href="/" class="brand">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div class="brand-text"><div class="name">Clean<span>ITR</span></div><div class="sub">Tax Platform by Chartered Accountants</div></div>
+    </a>
+    <a href="/tools.html" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> All tools</a>
   </div>
-</div>
+</header>
 
-<div class="wrap">
+<main class="page">
+  <span class="eyebrow">Free tool · GSTR-3B</span>
+  <h1>GSTR-3B Summary Generator</h1>
+  <p class="lead">Upload your monthly GSTR-3B PDFs and get a full-year consolidated view: outward supplies, ITC, reverse-charge and late-fee figures — plus a month-wise tax-vs-cash working and a compliance snapshot. Everything is read locally in your browser and can be exported to Excel, CSV or PDF.</p>
 
-  <!-- ===== INTAKE ===== -->
-  <div class="intake no-print" id="intake">
-    <div class="intake-head">
-      <h1>Upload GSTR-3B PDF(s)</h1>
-      <span class="tag">In-browser · Private · Nothing leaves your device</span>
-    </div>
-    <div class="intake-body">
-      <label class="drop" id="drop" for="fileInput">
-        <div class="ic">📄</div>
-        <h3>Drop your GSTR-3B PDF files here</h3>
-        <p>or click to browse — add all monthly filings (Apr → Mar) for a full-year report</p>
-        <div class="hint">Multiple files supported · PDF only</div>
-      </label>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-pane="analyze" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h2"/></svg><span>Upload</span></button>
+    <button class="tab" data-pane="summary" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-6 6-3-3-4 4"/></svg><span>Annual summary</span></button>
+    <button class="tab" data-pane="cash" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg><span>Tax &amp; cash</span></button>
+    <button class="tab" data-pane="compliance" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg><span>Compliance</span><span class="badge" id="badge-comp" style="display:none">0</span></button>
+    <button class="tab" data-pane="guide" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span>How to use</span></button>
+  </div>
+
+  <!-- UPLOAD PANE -->
+  <section class="pane active" id="pane-analyze">
+    <div class="uploadbox" id="dropzone">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg></div>
+      <h3>Add your GSTR-3B PDF files</h3>
+      <p>Drag &amp; drop here, or pick files. Add all months of a year (April → March) for a full-year report.</p>
+      <label class="filepick" for="fileInput"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Choose PDF files</label>
       <input type="file" id="fileInput" accept="application/pdf" multiple>
-
       <div class="filelist" id="filelist"></div>
-
-      <div class="actions">
-        <button class="btn-dark" id="btnGenerate" disabled>Generate Summary</button>
-        <button class="btn-ghost" id="btnClear" disabled>Clear Files</button>
-      </div>
-
-      <div class="note">
-        Data is extracted only from the uploaded PDFs. Fields not present in a GSTR-3B
-        (e.g. opening balances or the GST-portal cash/credit ledger) are shown as <b>N/A</b>.
-        Periods you don't upload are left blank in the year grid. All parsing happens locally in your browser.
-      </div>
-
-      <div class="msg" id="msg"></div>
     </div>
-  </div>
+    <div class="actionrow">
+      <button class="btn" id="goBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg> Generate summary</button>
+      <button class="btn sec" id="xlsBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> Excel</button>
+      <button class="btn sec" id="csvBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> CSV</button>
+      <button class="btn sec" id="printBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg> Print / PDF</button>
+      <button class="btn sec" id="resetBtn" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset</button>
+    </div>
+    <div class="msg" id="msg"></div>
+    <div class="cards" id="cards"></div>
+    <div id="analyze-hint"></div>
+  </section>
 
-  <!-- ===== REPORT ===== -->
-  <div id="report">
-    <div class="report-head">
-      <div class="crest">Goods &amp; Services Tax · Return Summary</div>
-      <h2 id="reportTitle">GSTR-3B Summary</h2>
-      <div class="rule"></div>
-      <div class="report-meta" id="reportMeta"></div>
+  <!-- ANNUAL SUMMARY PANE -->
+  <section class="pane" id="pane-summary">
+    <div id="report-head-summary"></div>
+    <div id="summary-body"><div class="muted">Upload GSTR-3B PDFs and generate the summary — the six consolidated tables will appear here.</div></div>
+  </section>
+
+  <!-- TAX & CASH PANE -->
+  <section class="pane" id="pane-cash">
+    <p class="subhead"><b>How much tax did you actually pay in cash each month?</b> Output tax (Table 3.1) less ITC set-off (Table 4) leaves the net liability that has to be paid from the cash ledger — with RCM always paid in cash and late fee &amp; interest added on top. This working is derived from your returns; adjust the ITC utilisation assumption if you set off differently.</p>
+    <div id="cash-body"><div class="muted">Generate the summary first — the month-wise tax-vs-cash working will appear here.</div></div>
+  </section>
+
+  <!-- COMPLIANCE PANE -->
+  <section class="pane" id="pane-compliance">
+    <p class="subhead">A quick health check across the year: which months carried <b>late fee or interest</b> (a filing-delay signal), reverse-charge liability, and where figures look missing. Use it to spot the months worth a second look before annual return time.</p>
+    <div id="compliance-body"><div class="muted">Generate the summary first — the compliance snapshot will appear here.</div></div>
+  </section>
+
+  <!-- GUIDE PANE -->
+  <section class="pane" id="pane-guide">
+    <div class="h-sec">How to use it</div>
+    <div class="guide">
+      <div class="gcard"><div class="gn">STEP 01</div><h4>Download GSTR-3B</h4><p>On the <b>GST portal</b> → Returns → GSTR-3B, open each filed month and use <b>Download filed GSTR-3B (PDF)</b>. Save every month you want in the report.</p></div>
+      <div class="gcard"><div class="gn">STEP 02</div><h4>Add the PDFs</h4><p>Drag the downloaded PDFs onto the Upload tab, or choose them. Add the full April→March set for a complete year — any missing month stays blank.</p></div>
+      <div class="gcard"><div class="gn">STEP 03</div><h4>Generate</h4><p>Click <b>Generate summary</b>. Each PDF's period is detected and its figures are read for outward supply, ITC, RCM and late fee &amp; interest.</p></div>
+      <div class="gcard"><div class="gn">STEP 04</div><h4>Review &amp; export</h4><p>Check the annual summary, tax-vs-cash and compliance tabs. Fill the editable opening-balance and portal-ledger fields, then export to <b>Excel, CSV or PDF</b>.</p></div>
     </div>
 
-    <!-- Table 1 -->
-    <section class="block">
-      <div class="block-head"><span class="num">1</span><h3>Outward Supplies</h3><span class="cap">Table 3.1</span></div>
-      <div class="tbl-scroll">
-        <table id="t1">
-          <thead><tr>
-            <th>Period</th><th>Taxable Sales</th><th>Exempt Sales</th>
-            <th>IGST</th><th>CGST</th><th>SGST</th>
-          </tr></thead>
-          <tbody></tbody>
-          <tfoot><tr><td>Total</td><td></td><td></td><td></td><td></td><td></td></tr></tfoot>
-        </table>
-      </div>
-    </section>
+    <div class="h-sec">What it does</div>
+    <ul class="feat">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Full-year consolidation</b><span>Twelve monthly 3Bs merged into one month-wise grid with automatic totals.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Outward, ITC &amp; RCM</b><span>Reads Table 3.1 outward (incl. zero-rated tax), Table 4 net ITC and 3.1(d) reverse charge.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Tax-vs-cash working</b><span>Output less ITC gives net liability; RCM, late fee and interest are added to show cash outflow.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Compliance snapshot</b><span>Flags months with late fee or interest, and separates RCM liability for the year.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Editable ledger fields</b><span>Opening balance and the portal credit ledger aren't in the 3B — enter them and the closing balance updates live.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>Excel · CSV · PDF export</b><span>Take the whole report into your working papers or a client-ready PDF in one click.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>GSTR-9 groundwork</b><span>The consolidated year is the starting base for annual-return reconciliation.</span></div></li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div><b>100% private</b><span>PDFs are parsed in the browser with PDF.js. Nothing is uploaded to any server.</span></div></li>
+    </ul>
 
-    <!-- Table 2 -->
-    <section class="block">
-      <div class="block-head"><span class="num">2</span><h3>Net GST Input (ITC)</h3><span class="cap">Table 4</span></div>
-      <div class="tbl-scroll">
-        <table id="t2">
-          <thead><tr><th>Period</th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead>
-          <tbody></tbody>
-          <tfoot><tr><td>Total</td><td></td><td></td><td></td></tr></tfoot>
-        </table>
-      </div>
-    </section>
+    <div class="steps-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg><div>Use the <b>text-based PDF filed on the portal</b>, not a scanned or photographed copy. Scanned images have no text layer, so figures can't be read. If a month shows "no figures", open that PDF and confirm you can select its text.</div></div>
 
-    <!-- Table 3 -->
-    <section class="block">
-      <div class="block-head"><span class="num">3</span><h3>RCM — Inward Supplies</h3><span class="cap">Table 3.1(d)</span></div>
-      <div class="tbl-scroll">
-        <table id="t3">
-          <thead><tr><th>Period</th><th>Taxable Value</th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead>
-          <tbody></tbody>
-          <tfoot><tr><td>Total</td><td></td><td></td><td></td><td></td></tr></tfoot>
-        </table>
-      </div>
-    </section>
+    <div class="cta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Preparing GSTR-9 or reconciling 3B with your books? <a href="https://wa.me/917838808704?text=Hi%20CleanITR%2C%20I%20need%20help%20with%20GSTR-3B%20consolidation%20and%20annual%20return">Ask a CA →</a></span>
+    </div>
+  </section>
 
-    <!-- Table 4 -->
-    <section class="block">
-      <div class="block-head"><span class="num">4</span><h3>Late Fees &amp; Interest</h3><span class="cap">Table 5.1 · IGST+CGST+SGST</span></div>
-      <div class="tbl-scroll">
-        <table id="t4">
-          <thead><tr><th>Period</th><th>Late Fees</th><th>Interest</th></tr></thead>
-          <tbody></tbody>
-          <tfoot><tr><td>Total</td><td></td><td></td></tr></tfoot>
-        </table>
-      </div>
-    </section>
-
-    <!-- Table 5 -->
-    <section class="block">
-      <div class="block-head"><span class="num">5</span><h3>GST Calculation Summary</h3><span class="cap">Opening editable · Closing auto-calculated</span></div>
-      <div class="tbl-scroll">
-        <table id="t5">
-          <thead><tr><th>Particulars</th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Table 6 -->
-    <section class="block">
-      <div class="block-head"><span class="num">6</span><h3>Input Balance (GST Portal)</h3><span class="cap">Editable · Electronic Credit Ledger</span></div>
-      <div class="tbl-scroll">
-        <table id="t6">
-          <thead><tr><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+  <div class="note" id="disclaimer">
+    <b>About this tool.</b> Figures are extracted only from the GSTR-3B PDFs you upload. Fields that a GSTR-3B does not contain — opening balances and the electronic cash/credit ledger from the portal — are shown as editable or <b>N/A</b>. The tax-vs-cash working assumes ITC is set off against output in the usual IGST→CGST/SGST order; your actual utilisation on the portal may differ. RCM is always payable in cash and cannot be paid from ITC. Rounding follows the returns as filed. This is general guidance for reconciliation, not professional advice — verify against the original returns and the electronic ledgers before relying on it.
   </div>
-</div>
+</main>
 
-<footer class="legal">
-  <span class="screen-only">Generated locally in your browser — no data is uploaded to any server.</span>
-  <span> · Figures rounded as filed. Verify against the original returns before use.</span>
-</footer>
+<footer>© 2026 Clean ITR · Tax Platform by Chartered Accountants</footer>
+<div class="toast" id="toast"></div>
 
 <script>
 /* ====================================================================
-   GSTR-3B SUMMARY GENERATOR
-   - PDF text extraction via PDF.js (local, in-browser)
-   - Robust field parsing from GSTR-3B text layout
-   - Indian number formatting, auto totals, auto GST calc
+   GSTR-3B SUMMARY GENERATOR — CleanITR
+   PDF text extraction + parsing logic preserved from the working tool,
+   re-skinned and extended with tax-vs-cash and compliance views.
    ==================================================================== */
-
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+if (typeof pdfjsLib !== "undefined") {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
 const MONTHS = ["April","May","June","July","August","September",
                 "October","November","December","January","February","March"];
@@ -406,11 +312,11 @@ const MONTH_MAP = {
   sep:"September",sept:"September",oct:"October",nov:"November",dec:"December"
 };
 
-let queued = [];      // {file, status}
-let records = [];     // parsed period records
+let queued = [];
+let records = [];
 let fyLabel = "";
 
-/* ---------- number helpers ---------- */
+const $ = id => document.getElementById(id);
 function toNum(s){
   if(s===null||s===undefined) return null;
   const cleaned = String(s).replace(/,/g,"").replace(/[₹\s]/g,"").trim();
@@ -430,6 +336,11 @@ function fmtIN(n){
   let out = other + last3 + "." + dec;
   return neg ? "-"+out : out;
 }
+function esc(s){return (s+'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let toastT;
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1800);}
+function showMsg(text,type){ const m=$('msg'); m.textContent=text; m.className="msg show "+type; }
+function hideMsg(){ $('msg').className="msg"; }
 
 /* ---------- PDF text extraction ---------- */
 async function extractText(file){
@@ -439,23 +350,19 @@ async function extractText(file){
   for(let p=1;p<=pdf.numPages;p++){
     const page = await pdf.getPage(p);
     const content = await page.getTextContent();
-    // join with spaces, preserve order
     full += content.items.map(i=>i.str).join(" ") + "\n";
   }
   return full.replace(/\u00a0/g," ");
 }
 
-/* ---------- find FY / period from text ---------- */
 function detectPeriod(text){
   let month=null, year=null;
-  // "Year 2023-24" + "Period April" patterns vary; try common labels
   let m = text.match(/(?:Tax\s*Period|Period|Month)\s*[:\-]?\s*([A-Za-z]+)\s*[, ]?\s*(\d{4})/i);
   if(m){ month = MONTH_MAP[m[1].toLowerCase()]; year = parseInt(m[2]); }
   if(!month){
     m = text.match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\b[\s,]*?(\d{4})/i);
     if(m){ month = MONTH_MAP[m[1].toLowerCase()]; year = parseInt(m[2]); }
   }
-  // Financial year "2023-24" / "2023-2024"
   let fy=null;
   let f = text.match(/(?:Financial\s*Year|FY|Year)\s*[:\-]?\s*(\d{4})\s*[-–]\s*(\d{2,4})/i);
   if(f){
@@ -465,8 +372,6 @@ function detectPeriod(text){
   return {month, year, fy};
 }
 
-/* ---------- grab a numeric tuple following a label ---------- */
-/* GSTR-3B rows generally read: <label> <total taxable> <igst> <cgst> <sgst> <cess> */
 function numbersAfter(text, labelRegex, count){
   const m = text.match(labelRegex);
   if(!m) return null;
@@ -476,11 +381,9 @@ function numbersAfter(text, labelRegex, count){
   return nums.length ? nums : null;
 }
 
-/* ---------- parse one GSTR-3B ---------- */
 function parseReturn(text){
   const t = text.replace(/\s+/g," ");
   const per = detectPeriod(t);
-
   const rec = {
     month: per.month, year: per.year, fy: per.fy,
     out:{taxable:null,exempt:null,igst:null,cgst:null,sgst:null},
@@ -489,30 +392,17 @@ function parseReturn(text){
     fees:{late:null,interest:null}
   };
 
-  // ---- 3.1(a) Outward taxable (other than zero/nil/exempt) ----
-  // label like: "(a) Outward taxable supplies (other than zero rated, nil rated and exempted)"
   let outA = numbersAfter(t, /\(a\)\s*Outward\s+taxable\s+supplies\s*\(other[^)]*\)/i, 5);
   if(!outA) outA = numbersAfter(t, /Outward\s+taxable\s+supplies\s*\(other[^)]*\)/i, 5);
-  if(outA){
-    rec.out.taxable = outA[0];
-    rec.out.igst = outA[1]; rec.out.cgst = outA[2]; rec.out.sgst = outA[3];
-  }
+  if(outA){ rec.out.taxable = outA[0]; rec.out.igst = outA[1]; rec.out.cgst = outA[2]; rec.out.sgst = outA[3]; }
 
-  // ---- Exempt = 3.1(b) Zero rated + 3.1(c) Nil rated & exempted (taxable values) ----
-  // 3.1(b) zero-rated also carries TAX in the export-on-IGST-payment case, so grab
-  // the full row (taxable, igst, cgst, sgst, cess) and fold its tax into Table 1.
   let zeroRow = numbersAfter(t, /\(b\)\s*Outward\s+taxable\s+supplies\s*\(zero\s*rated\)/i, 5);
   if(!zeroRow) zeroRow = numbersAfter(t, /Outward\s+taxable\s+supplies\s*\(zero\s*rated\)/i, 5);
   let nilRow = numbersAfter(t, /\(c\)\s*Other\s+outward\s+supplies\s*\(Nil[^)]*\)/i, 1);
   if(!nilRow) nilRow = numbersAfter(t, /Other\s+outward\s+supplies\s*\(Nil\s*rated[^)]*\)/i, 1);
-
   const zeroTaxable = zeroRow ? zeroRow[0] : null;
   const nilV  = nilRow  ? nilRow[0]  : null;
-  if(zeroTaxable!==null || nilV!==null){
-    rec.out.exempt = (zeroTaxable||0) + (nilV||0);   // zero-rated + nil-rated/exempted (values)
-  }
-
-  // Cumulative outward tax = 3.1(a) tax + 3.1(b) zero-rated tax
+  if(zeroTaxable!==null || nilV!==null){ rec.out.exempt = (zeroTaxable||0) + (nilV||0); }
   if(zeroRow){
     const zIgst = zeroRow[1], zCgst = zeroRow[2], zSgst = zeroRow[3];
     if(zIgst!==null){ rec.out.igst = (rec.out.igst||0) + zIgst; }
@@ -520,32 +410,14 @@ function parseReturn(text){
     if(zSgst!==null){ rec.out.sgst = (rec.out.sgst||0) + zSgst; }
   }
 
-  // ---- 3.1(d) Inward supplies liable to reverse charge (RCM) ----
   let rcm = numbersAfter(t, /\(d\)\s*Inward\s+supplies\s*\(liable\s+to\s+reverse\s+charge\)/i, 5);
   if(!rcm) rcm = numbersAfter(t, /Inward\s+supplies\s*\(liable\s+to\s+reverse\s+charge\)/i, 5);
-  if(rcm){
-    rec.rcm.taxable = rcm[0];
-    rec.rcm.igst = rcm[1]; rec.rcm.cgst = rcm[2]; rec.rcm.sgst = rcm[3];
-  }
+  if(rcm){ rec.rcm.taxable = rcm[0]; rec.rcm.igst = rcm[1]; rec.rcm.cgst = rcm[2]; rec.rcm.sgst = rcm[3]; }
 
-  // ---- Table 4(C) Net ITC Available ----
   let itc = numbersAfter(t, /Net\s+ITC\s+Available\s*\([^)]*\)/i, 4);
   if(!itc) itc = numbersAfter(t, /Net\s+ITC\s+Available/i, 4);
-  if(itc){
-    // order: IGST CGST SGST CESS
-    rec.itc.igst = itc[0]; rec.itc.cgst = itc[1]; rec.itc.sgst = itc[2];
-  }
+  if(itc){ rec.itc.igst = itc[0]; rec.itc.cgst = itc[1]; rec.itc.sgst = itc[2]; }
 
-  // ---- 5.1 Interest & Late fee (from the 5.1 table ONLY) ----
-  // Columns: Details | Integrated tax | Central tax | State/UT tax | Cess
-  // Rows: "System computed Interest", "Interest Paid", "Late fee".
-  // Interest = Integrated + Central + State on the "Interest Paid" row.
-  // Late fee = Integrated + Central + State on the "Late fee" row.
-  // "Late fee"/"Interest" also appear in the 6.1 Payment-of-tax table, so we must
-  // first carve out the 5.1 block and search ONLY inside it.
-
-  // 1) Isolate the 5.1 block: from the "5.1 Interest and Late fee" heading
-  //    up to the next section (5.x / 6.x heading, payment table, or verification).
   let block = "";
   const startRe = /5\.1\s*Interest\s+and\s+Late\s+fee/i;
   const sm = t.match(startRe);
@@ -555,18 +427,13 @@ function parseReturn(text){
     const em = rest.match(endRe);
     block = em ? rest.slice(0, em.index) : rest.slice(0, 600);
   } else {
-    // fallback: a window around a standalone "Interest and Late fee" label
     const fm = t.match(/Interest\s+and\s+Late\s+fee[\s\S]{0,500}/i);
     block = fm ? fm[0] : "";
   }
-
-  // 2) Within the block, read the 3 value cells (IGST/CGST/SGST) after a row label.
-  //    A standalone "-" is nil (0) and holds its column position.
   function cellsAfter(label, scope){
     const m = scope.match(label);
     if(!m) return null;
     let after = scope.slice(m.index + m[0].length);
-    // stop at the next row label inside the block
     const stop = after.search(/Interest\s*Paid|System\s*computed|Late\s*[fF]ee/i);
     if(stop > 0) after = after.slice(0, stop);
     const toks = after.match(/-?[\d,]+(?:\.\d+)?|(?:^|\s)-(?=\s|$)/g) || [];
@@ -574,317 +441,401 @@ function parseReturn(text){
                       .slice(0,3).map(tok => tok==="-" ? 0 : toNum(tok));
     return cells.length ? cells.reduce((a,b)=>a+(b||0),0) : null;
   }
-
   if(block){
-    // Late fee row (the data row inside 5.1)
     rec.fees.late = cellsAfter(/Late\s*[fF]ee/i, block);
-    // Interest Paid row specifically (not "System computed Interest")
     rec.fees.interest = cellsAfter(/Interest\s*Paid/i, block);
-    // if no explicit "Paid" label, fall back to a non-system Interest row in-block
     if(rec.fees.interest===null){
       rec.fees.interest = cellsAfter(/(?<!System\s)(?<!computed\s)Interest(?!\s+and)/i, block);
     }
   }
-
   return rec;
 }
 
-/* ---------- UI: file queue ---------- */
-const fileInput = document.getElementById("fileInput");
-const drop = document.getElementById("drop");
-const filelist = document.getElementById("filelist");
-const btnGen = document.getElementById("btnGenerate");
-const btnClear = document.getElementById("btnClear");
-const msg = document.getElementById("msg");
-
-function showMsg(text,type){ msg.textContent=text; msg.className="msg show "+type; }
-function hideMsg(){ msg.className="msg"; }
-
+/* ---------- file queue + drag/drop ---------- */
 function renderQueue(){
-  filelist.innerHTML="";
-  queued.forEach((q,i)=>{
-    const row=document.createElement("div"); row.className="filerow";
-    row.innerHTML=`<span class="nm">📄 ${q.file.name}</span>
-      <span class="st ${q.cls||'busy'}">${q.status||'queued'}</span>`;
-    filelist.appendChild(row);
-  });
-  btnGen.disabled = queued.length===0;
-  btnClear.disabled = queued.length===0;
+  const el = $('filelist');
+  el.innerHTML = queued.map((q,i)=>`<div class="fileitem">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+    <span class="nm">${esc(q.file.name)}</span>
+    <span class="st ${q.cls||'busy'}">${esc(q.status||'queued')}</span>
+    <button class="rm" data-i="${i}" title="Remove">✕</button>
+  </div>`).join('');
+  el.querySelectorAll('.rm').forEach(b=>b.onclick=()=>{queued.splice(+b.dataset.i,1);renderQueue();syncButtons();});
+  syncButtons();
 }
-
+function syncButtons(){ $('goBtn').disabled = queued.length===0; }
 function addFiles(files){
   hideMsg();
   [...files].forEach(f=>{
     if(f.type!=="application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) return;
-    queued.push({file:f,status:"queued",cls:"busy"});
+    if(!queued.some(q=>q.file.name===f.name && q.file.size===f.size))
+      queued.push({file:f,status:"queued",cls:"busy"});
   });
   renderQueue();
 }
-
-fileInput.addEventListener("change",e=>addFiles(e.target.files));
-["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
-["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
-drop.addEventListener("drop",e=>{ if(e.dataTransfer.files) addFiles(e.dataTransfer.files); });
-
-btnClear.addEventListener("click",()=>{ queued=[]; fileInput.value=""; renderQueue(); hideMsg(); });
+$('fileInput').addEventListener('change', e=>{ addFiles(e.target.files); e.target.value=''; });
+const dz = $('dropzone');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+dz.addEventListener('drop',e=>{ if(e.dataTransfer?.files) addFiles(e.dataTransfer.files); });
 
 /* ---------- generate ---------- */
-btnGen.addEventListener("click",async()=>{
-  hideMsg(); btnGen.disabled=true; records=[];
+$('goBtn').addEventListener('click', async ()=>{
+  hideMsg(); $('goBtn').disabled=true; records=[];
   let parsedCount=0;
   for(const q of queued){
-    q.status="parsing…"; q.cls="busy"; renderQueue();
+    q.status="reading…"; q.cls="busy"; renderQueue();
     try{
       const text = await extractText(q.file);
       const rec = parseReturn(text);
       records.push(rec);
       const hasData = rec.out.taxable!==null || rec.itc.igst!==null || rec.rcm.taxable!==null;
-      if(rec.month){ q.status = rec.month+(rec.year?" "+rec.year:"")+(hasData?" ✓":" (no figures)"); q.cls = hasData?"ok":"warn"; }
-      else { q.status = hasData?"parsed ✓ (period unknown)":"parsed (period unknown)"; q.cls="warn"; }
+      if(rec.month){ q.status = rec.month+(rec.year?" "+rec.year:"")+(hasData?" ✓":" · no figures"); q.cls = hasData?"ok":"warn"; }
+      else { q.status = hasData?"parsed · period ?":"period ?"; q.cls="warn"; }
       parsedCount++;
-    }catch(err){
-      q.status="failed"; q.cls="err"; console.error(err);
-    }
+    }catch(err){ q.status="failed"; q.cls="err"; console.error(err); }
     renderQueue();
   }
   if(parsedCount===0){
-    showMsg("Could not read any of the uploaded files. Make sure they are text-based GSTR-3B PDFs (not scanned images).","error");
-    btnGen.disabled=false; return;
+    showMsg("Could not read any of the uploaded files. Make sure they are text-based GSTR-3B PDFs downloaded from the portal — not scanned images.","error");
+    $('goBtn').disabled=false; return;
   }
   buildReport();
 });
 
-/* ---------- assemble FY + period ordering ---------- */
+/* ---------- FY + ordering ---------- */
 function deriveFY(){
-  // prefer explicit FY in any record
   let fy = records.map(r=>r.fy).find(Boolean);
   if(fy) return fy;
-  // derive from months/years
   const dated = records.filter(r=>r.month && r.year);
   if(dated.length){
-    // FY starts in April. A month Jan-Mar belongs to FY (year-1)-(year)
     const r = dated[0];
     const mi = MONTHS.indexOf(r.month);
-    const startYear = (mi<=8) ? r.year : r.year-1; // Apr(0)..Dec(8) -> same year start; Jan-Mar -> prev
+    const startYear = (mi<=8) ? r.year : r.year-1;
     return startYear + "-" + String((startYear+1)).slice(-2);
   }
   return "XXXX-XX";
 }
-function recForMonth(m){
-  return records.find(r=>r.month===m) || null;
-}
+function recForMonth(m){ return records.find(r=>r.month===m) || null; }
+
+let PERIODS = [];   // [{label, rec}]
+window.__calc = {input:{igst:0,cgst:0,sgst:0}, output:{igst:0,cgst:0,sgst:0}};
 
 /* ---------- build report ---------- */
 function buildReport(){
   fyLabel = deriveFY();
-  document.getElementById("reportTitle").textContent = "GSTR-3B Summary – FY "+fyLabel;
   const dated = records.filter(r=>r.month).length;
-  document.getElementById("reportMeta").innerHTML =
-    `<span><b>${records.length}</b> return(s) processed</span>
-     <span>Basis: <b>${dated?'Month-wise':'As-extracted'}</b></span>
-     <span>Generated: <b>${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</b></span>`;
+  PERIODS = dated
+    ? MONTHS.filter(m=>recForMonth(m)).map(m=>({label:m, rec:recForMonth(m)}))
+    : records.map((r,i)=>({label:"Return "+(i+1), rec:r}));
 
-  // ordered period rows: use FY month order, only months we actually have; if none dated, list files generically
-  let periods;
-  if(dated){
-    periods = MONTHS.filter(m=>recForMonth(m)).map(m=>({label:m, rec:recForMonth(m)}));
-  }else{
-    periods = records.map((r,i)=>({label:"Return "+(i+1), rec:r}));
+  renderCards();
+  renderSummary();
+  renderCash();
+  renderCompliance();
+
+  ['xlsBtn','csvBtn','printBtn'].forEach(id=>$(id).disabled=false);
+  $('resetBtn').style.display='inline-flex';
+
+  const t1empty = PERIODS.every(p=>p.rec.out.taxable===null);
+  const t2empty = PERIODS.every(p=>p.rec.itc.igst===null);
+  if(t1empty && t2empty){
+    showMsg("Files were read but no standard GSTR-3B figures were detected. The PDFs may use a non-standard layout or be scanned. Review the values in the summary.","error");
+  } else {
+    showMsg("Summary generated. Opening balance and the GST-portal credit ledger aren't part of a GSTR-3B — enter them in the highlighted fields and the closing balance updates automatically. Switch to Tax & cash and Compliance for the deeper views.","info");
   }
+  toast(`Consolidated ${records.length} return(s)`);
+}
 
-  const cell = v => v===null||v===undefined ? `<td class="na">N/A</td>`
-                 : `<td class="${v<0?'neg':''}">${fmtIN(v)}</td>`;
+/* number cell */
+const cell = v => v===null||v===undefined ? `<td class="na">N/A</td>` : `<td class="${v<0?'neg':''}">${fmtIN(v)}</td>`;
+function sumField(getter){ let s=0,any=false; PERIODS.forEach(p=>{const v=getter(p.rec); if(v!==null&&v!==undefined){s+=v;any=true;}}); return any?s:null; }
 
-  /* ---- Table 1: Outward ---- */
-  let b1="", t1=[0,0,0,0,0];
-  periods.forEach(p=>{
-    const o=p.rec.out;
-    b1+=`<tr><td>${p.label}</td>${cell(o.taxable)}${cell(o.exempt)}${cell(o.igst)}${cell(o.cgst)}${cell(o.sgst)}</tr>`;
-    [o.taxable,o.exempt,o.igst,o.cgst,o.sgst].forEach((v,i)=>{ if(v!==null)t1[i]+=v; });
-  });
-  setTable("t1",b1,["Total",fmtIN(t1[0]),fmtIN(t1[1]),fmtIN(t1[2]),fmtIN(t1[3]),fmtIN(t1[4])]);
+/* ---------- cards ---------- */
+function renderCards(){
+  const outTax = sumField(r=> (r.out.igst||0)+(r.out.cgst||0)+(r.out.sgst||0) );
+  const itc = sumField(r=> (r.itc.igst||0)+(r.itc.cgst||0)+(r.itc.sgst||0) );
+  const rcm = sumField(r=> (r.rcm.igst||0)+(r.rcm.cgst||0)+(r.rcm.sgst||0) );
+  const late = sumField(r=> r.fees.late );
+  const interest = sumField(r=> r.fees.interest );
+  const netCash = (outTax||0) - (itc||0) + (rcm||0) + (late||0) + (interest||0);
+  const lateMonths = PERIODS.filter(p=>(p.rec.fees.late||0)>0 || (p.rec.fees.interest||0)>0).length;
 
-  /* ---- Table 2: ITC ---- */
-  let b2="", t2=[0,0,0];
-  periods.forEach(p=>{
-    const c=p.rec.itc;
-    b2+=`<tr><td>${p.label}</td>${cell(c.igst)}${cell(c.cgst)}${cell(c.sgst)}</tr>`;
-    [c.igst,c.cgst,c.sgst].forEach((v,i)=>{ if(v!==null)t2[i]+=v; });
-  });
-  setTable("t2",b2,["Total",fmtIN(t2[0]),fmtIN(t2[1]),fmtIN(t2[2])]);
+  $('cards').innerHTML =
+    card("Returns", records.length) +
+    card("Output tax", '₹'+fmtIN(outTax||0), 'acc') +
+    card("ITC availed", '₹'+fmtIN(itc||0), 'acc') +
+    (rcm ? card("RCM payable", '₹'+fmtIN(rcm), 'warn') : '') +
+    ((late||interest) ? card("Late fee + interest", '₹'+fmtIN((late||0)+(interest||0)), 'warn') : '') +
+    card("Est. net cash", '₹'+fmtIN(netCash), netCash>0?'neg':'acc');
 
-  /* ---- Table 3: RCM ---- */
-  let b3="", t3=[0,0,0,0];
-  periods.forEach(p=>{
-    const r=p.rec.rcm;
-    b3+=`<tr><td>${p.label}</td>${cell(r.taxable)}${cell(r.igst)}${cell(r.cgst)}${cell(r.sgst)}</tr>`;
-    [r.taxable,r.igst,r.cgst,r.sgst].forEach((v,i)=>{ if(v!==null)t3[i]+=v; });
-  });
-  setTable("t3",b3,["Total",fmtIN(t3[0]),fmtIN(t3[1]),fmtIN(t3[2]),fmtIN(t3[3])]);
+  $('analyze-hint').innerHTML = `<div class="cta" style="margin-top:6px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span>Summary ready for <b>FY ${esc(fyLabel)}</b>. Open <b>Annual summary</b> for the six tables, <b>Tax &amp; cash</b> for month-wise cash outflow, or <b>Compliance</b> for late-fee flags — then export.</span></div>`;
 
-  /* ---- Table 4: Fees & Interest (from 5.1, non-editable) ---- */
-  let b4="", t4=[0,0];
-  periods.forEach(p=>{
-    const f=p.rec.fees;
-    b4+=`<tr><td>${p.label}</td>${cell(f.late)}${cell(f.interest)}</tr>`;
-    [f.late,f.interest].forEach((v,i)=>{ if(v!==null)t4[i]+=v; });
-  });
-  setTable("t4",b4,["Total",fmtIN(t4[0]),fmtIN(t4[1])]);
+  setBadge('badge-comp', lateMonths);
+}
+function card(k,v,cls){ return `<div class="card ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div></div>`; }
+function setBadge(id,n){ const el=$(id); if(n>0){ el.textContent=n; el.style.display='inline-block'; } else el.style.display='none'; }
 
-  /* ---- Table 5: GST Calculation Summary ----
-     Opening Balance: editable (defaults 0, not in 3B)
-     Input During the Year  = total ITC (Table 2)
-     Output During the Year = total output tax (Table 1)
-     Closing Balance        = Opening + Input - Output  (auto, live)        */
-  const input = {igst:t2[0],cgst:t2[1],sgst:t2[2]};
-  const output= {igst:t1[2],cgst:t1[3],sgst:t1[4]};
-  window.__calc = {input, output};   // stored for live recompute
+/* ---------- ANNUAL SUMMARY (6 tables) ---------- */
+function renderSummary(){
+  $('report-head-summary').innerHTML = `<div class="note" style="margin-top:0;margin-bottom:18px;border-left:3px solid var(--teal)">
+    <b>GSTR-3B Summary · FY ${esc(fyLabel)}</b> — ${records.length} return(s), basis ${PERIODS[0]&&PERIODS[0].label.length<8?'month-wise':'month-wise'}. Generated ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}.</div>`;
 
-  const t5b = document.querySelector("#t5 tbody");
-  const fixedRow=(name,obj)=>{
-    const c=k=>obj[k]===null?`<td class="na">N/A</td>`:`<td class="${obj[k]<0?'neg':''}">${fmtIN(obj[k])}</td>`;
-    return `<tr><td class="summary-particular">${name}</td>${c('igst')}${c('cgst')}${c('sgst')}</tr>`;
-  };
-  const openInput = k =>
-    `<td class="editable"><input type="number" step="0.01" class="edit-in open-in" data-k="${k}" value="0"></td>`;
+  const b = [];
 
-  t5b.innerHTML =
-    `<tr><td class="summary-particular">Opening Balance <span class="edit-hint">editable</span></td>${openInput('igst')}${openInput('cgst')}${openInput('sgst')}</tr>` +
-    fixedRow("Input During the Year",input) +
-    fixedRow("Output During the Year",output) +
-    `<tr class="calc-row-final"><td class="summary-particular">Closing Balance</td>
-       <td id="close-igst"></td><td id="close-cgst"></td><td id="close-sgst"></td></tr>`;
+  // Table 1 — Outward
+  b.push(block(1,'Outward supplies','Table 3.1',
+    ['Period','Taxable sales','Exempt / zero','IGST','CGST','SGST'],
+    PERIODS.map(p=>{const o=p.rec.out; return [p.label,o.taxable,o.exempt,o.igst,o.cgst,o.sgst];}),
+    ['Total','taxable','exempt','igst','cgst','sgst'].map((k,i)=> i===0?null:sumField(r=>r.out[k]))
+  ));
+
+  // Table 2 — ITC
+  b.push(block(2,'Net GST input (ITC)','Table 4',
+    ['Period','IGST','CGST','SGST'],
+    PERIODS.map(p=>{const c=p.rec.itc; return [p.label,c.igst,c.cgst,c.sgst];}),
+    [null, sumField(r=>r.itc.igst),sumField(r=>r.itc.cgst),sumField(r=>r.itc.sgst)]
+  ));
+
+  // Table 3 — RCM
+  b.push(block(3,'RCM — inward supplies','Table 3.1(d)',
+    ['Period','Taxable value','IGST','CGST','SGST'],
+    PERIODS.map(p=>{const r=p.rec.rcm; return [p.label,r.taxable,r.igst,r.cgst,r.sgst];}),
+    [null, sumField(r=>r.rcm.taxable),sumField(r=>r.rcm.igst),sumField(r=>r.rcm.cgst),sumField(r=>r.rcm.sgst)]
+  ));
+
+  // Table 4 — Late fee & interest
+  b.push(block(4,'Late fees & interest','Table 5.1',
+    ['Period','Late fees','Interest'],
+    PERIODS.map(p=>{const f=p.rec.fees; return [p.label,f.late,f.interest];}),
+    [null, sumField(r=>r.fees.late),sumField(r=>r.fees.interest)]
+  ));
+
+  // Table 5 — GST calc summary (editable opening + auto closing)
+  const input = {igst:sumField(r=>r.itc.igst)||0, cgst:sumField(r=>r.itc.cgst)||0, sgst:sumField(r=>r.itc.sgst)||0};
+  const output= {igst:sumField(r=>r.out.igst)||0, cgst:sumField(r=>r.out.cgst)||0, sgst:sumField(r=>r.out.sgst)||0};
+  window.__calc = {input, output};
+  const fixedRow=(name,obj)=>`<tr><td class="rowlabel">${name}</td>${['igst','cgst','sgst'].map(k=>`<td class="${obj[k]<0?'neg':''}">${fmtIN(obj[k])}</td>`).join('')}</tr>`;
+  const openInput=k=>`<td class="editable"><input type="number" step="0.01" class="edit-in open-in" data-k="${k}" value="0"></td>`;
+  const t5 = `<section class="block"><div class="block-head"><span class="num">5</span><h3>GST calculation summary</h3><span class="cap">Opening editable · closing auto</span></div>
+    <div class="tbl-scroll"><table id="t5"><thead><tr><th>Particulars</th><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead><tbody>
+    <tr><td class="rowlabel">Opening balance <span class="edit-hint">editable</span></td>${openInput('igst')}${openInput('cgst')}${openInput('sgst')}</tr>
+    ${fixedRow('Input during the year (ITC)',input)}
+    ${fixedRow('Output during the year',output)}
+    <tr class="calc-final"><td class="rowlabel">Closing balance</td><td id="close-igst"></td><td id="close-cgst"></td><td id="close-sgst"></td></tr>
+    </tbody></table></div></section>`;
+  b.push(t5);
+
+  // Table 6 — portal input balance (editable)
+  const portalInput=k=>`<td class="editable"><input type="number" step="0.01" class="edit-in portal-in" data-k="${k}" placeholder="0.00"></td>`;
+  b.push(`<section class="block"><div class="block-head"><span class="num">6</span><h3>Input balance (GST portal)</h3><span class="cap">Editable · credit ledger</span></div>
+    <div class="tbl-scroll"><table id="t6"><thead><tr><th>IGST</th><th>CGST</th><th>SGST</th></tr></thead><tbody>
+    <tr>${portalInput('igst')}${portalInput('cgst')}${portalInput('sgst')}</tr></tbody></table></div></section>`);
+
+  $('summary-body').innerHTML = b.join('');
 
   function recalcClosing(){
     ['igst','cgst','sgst'].forEach(k=>{
       const op = toNum(document.querySelector(`.open-in[data-k="${k}"]`).value) || 0;
       const val = op + (window.__calc.input[k]||0) - (window.__calc.output[k]||0);
-      const cell = document.getElementById('close-'+k);
-      cell.textContent = fmtIN(val);
-      cell.className = val<0 ? 'neg' : '';
+      const c = $('close-'+k); c.textContent = fmtIN(val); c.className = val<0?'neg':'pos';
     });
   }
   document.querySelectorAll('.open-in').forEach(inp=>inp.addEventListener('input',recalcClosing));
   recalcClosing();
+}
 
-  /* ---- Table 6: Input Balance (GST Portal) -> editable (not in 3B) ---- */
-  const portalInput = k =>
-    `<td class="editable"><input type="number" step="0.01" class="edit-in portal-in" data-k="${k}" placeholder="0.00"></td>`;
-  document.querySelector("#t6 tbody").innerHTML =
-    `<tr>${portalInput('igst')}${portalInput('cgst')}${portalInput('sgst')}</tr>`;
+function block(num,title,cap,heads,rows,foot){
+  const head = `<section class="block"><div class="block-head"><span class="num">${num}</span><h3>${esc(title)}</h3><span class="cap">${esc(cap)}</span></div><div class="tbl-scroll"><table><thead><tr>${heads.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>`;
+  const body = rows.map(r=>`<tr>${r.map((v,i)=> i===0?`<td>${esc(v)}</td>`:cell(v)).join('')}</tr>`).join('');
+  const ft = `</tbody><tfoot><tr>${foot.map((v,i)=> i===0?`<td>Total</td>`:cell(v)).join('')}</tr></tfoot></table></div></section>`;
+  return head+body+ft;
+}
 
-  // reveal
-  document.getElementById("report").classList.add("show");
-  document.getElementById("btnPrint").disabled=false;
-  document.getElementById("btnCsv").disabled=false;
-  document.getElementById("btnXls").disabled=false;
-  document.getElementById("btnReset").disabled=false;
-  document.getElementById("report").scrollIntoView({behavior:"smooth"});
+/* ---------- TAX & CASH (month-wise net cash working) ----------
+   For each month:
+   Output tax  = out.igst+cgst+sgst
+   ITC set-off = min available ITC against output (simplified: total ITC capped at output)
+   Net tax in cash = max(output - itc, 0)
+   + RCM (always cash) + late fee + interest = total cash outflow
+   ITC carry-forward shown when ITC exceeds output.                     */
+function renderCash(){
+  const rows = PERIODS.map(p=>{
+    const o=p.rec.out, c=p.rec.itc, rc=p.rec.rcm, f=p.rec.fees;
+    const output=(o.igst||0)+(o.cgst||0)+(o.sgst||0);
+    const itc=(c.igst||0)+(c.cgst||0)+(c.sgst||0);
+    const setoff=Math.min(itc,output);
+    const netTax=Math.max(output-itc,0);
+    const carry=Math.max(itc-output,0);
+    const rcm=(rc.igst||0)+(rc.cgst||0)+(rc.sgst||0);
+    const late=f.late||0, intr=f.interest||0;
+    const cash=netTax+rcm+late+intr;
+    return {label:p.label,output,itc,setoff,netTax,carry,rcm,late,intr,cash};
+  });
+  const T=(k)=>rows.reduce((s,r)=>s+r[k],0);
 
-  // warn if some sections empty
-  const anyMissing = t1.every(x=>x===0) && t2.every(x=>x===0);
-  if(anyMissing){
-    showMsg("Files were read but no standard GSTR-3B figures were detected. The PDFs may use a non-standard layout or be scanned images. Review the table values.","error");
-  } else {
-    showMsg("Report generated. Opening balance and the GST-portal credit ledger are not part of GSTR-3B — enter them in the highlighted fields and the Closing Balance updates automatically.","info");
+  let h = `<div class="cards" style="margin-top:0">
+    ${card('Output tax', '₹'+fmtIN(T('output')), 'acc')}
+    ${card('ITC set off', '₹'+fmtIN(T('setoff')), 'acc')}
+    ${card('Net tax in cash', '₹'+fmtIN(T('netTax')), T('netTax')>0?'neg':'')}
+    ${card('RCM (cash)', '₹'+fmtIN(T('rcm')), T('rcm')?'warn':'')}
+    ${card('Late fee + interest', '₹'+fmtIN(T('late')+T('intr')), (T('late')+T('intr'))?'warn':'')}
+    ${card('Total cash outflow', '₹'+fmtIN(T('cash')), T('cash')>0?'neg':'')}
+  </div>`;
+
+  h += `<section class="block"><div class="block-head"><span class="num">₹</span><h3>Month-wise tax vs cash</h3><span class="cap">Derived working</span></div>
+    <div class="tbl-scroll"><table><thead><tr>
+      <th>Period</th><th>Output tax</th><th>ITC available</th><th>ITC set off</th>
+      <th>Net tax (cash)</th><th>ITC carried fwd</th><th>RCM (cash)</th><th>Late fee</th><th>Interest</th><th>Cash outflow</th></tr></thead><tbody>`;
+  for(const r of rows){
+    h += `<tr><td>${esc(r.label)}</td>
+      <td>${fmtIN(r.output)}</td><td>${fmtIN(r.itc)}</td><td>${fmtIN(r.setoff)}</td>
+      <td class="${r.netTax>0?'neg':''}">${fmtIN(r.netTax)}</td>
+      <td class="${r.carry>0?'pos':''}">${fmtIN(r.carry)}</td>
+      <td class="${r.rcm>0?'neg':''}">${fmtIN(r.rcm)}</td>
+      <td class="${r.late>0?'neg':''}">${fmtIN(r.late)}</td>
+      <td class="${r.intr>0?'neg':''}">${fmtIN(r.intr)}</td>
+      <td class="${r.cash>0?'neg':''}"><b>${fmtIN(r.cash)}</b></td></tr>`;
   }
+  h += `</tbody><tfoot><tr><td>Total</td>
+    <td>${fmtIN(T('output'))}</td><td>${fmtIN(T('itc'))}</td><td>${fmtIN(T('setoff'))}</td>
+    <td>${fmtIN(T('netTax'))}</td><td>${fmtIN(T('carry'))}</td><td>${fmtIN(T('rcm'))}</td>
+    <td>${fmtIN(T('late'))}</td><td>${fmtIN(T('intr'))}</td><td>${fmtIN(T('cash'))}</td></tr></tfoot></table></div></section>`;
+
+  h += `<div class="note"><b>How this is derived.</b> Net tax in cash = output tax − ITC available, floored at zero; any excess ITC is shown as carried forward. RCM, late fee and interest are added because they must be paid in cash, not from credit. This is a simplified combined-head working; the portal applies utilisation head-by-head (IGST first), so your actual cash split by IGST/CGST/SGST may differ.</div>`;
+  $('cash-body').innerHTML = h;
+  window.__cashRows = rows;   // for export
 }
 
-function setTable(id, bodyHTML, footArr){
-  document.querySelector("#"+id+" tbody").innerHTML = bodyHTML || "";
-  const ft = document.querySelectorAll("#"+id+" tfoot td");
-  footArr.forEach((v,i)=>{ if(ft[i]) ft[i].textContent=v; });
+/* ---------- COMPLIANCE snapshot ---------- */
+function renderCompliance(){
+  const rows = PERIODS.map(p=>{
+    const f=p.rec.fees, rc=p.rec.rcm;
+    const late=f.late||0, intr=f.interest||0;
+    const rcm=(rc.igst||0)+(rc.cgst||0)+(rc.sgst||0);
+    const hasData = p.rec.out.taxable!==null || p.rec.itc.igst!==null;
+    let status, cls;
+    if(!hasData){ status='No figures'; cls='rcm'; }
+    else if(late>0 || intr>0){ status='Late / interest'; cls='late'; }
+    else { status='On time'; cls='ok'; }
+    return {label:p.label,late,intr,rcm,status,cls,hasData};
+  });
+  const lateCount = rows.filter(r=>r.cls==='late').length;
+  const missing = MONTHS.filter(m=>!recForMonth(m));
+
+  let h = `<div class="cards" style="margin-top:0">
+    ${card('Months filed', PERIODS.length)}
+    ${card('Late / interest months', lateCount, lateCount?'warn':'')}
+    ${card('Months not uploaded', PERIODS[0]&&PERIODS[0].label.length<8?missing.length:'—', (PERIODS[0]&&PERIODS[0].label.length<8&&missing.length)?'warn':'')}
+  </div>`;
+
+  h += `<section class="block"><div class="block-head"><span class="num">✓</span><h3>Month-wise compliance</h3><span class="cap">Late fee = filing-delay signal</span></div>
+    <div class="tbl-scroll"><table><thead><tr>
+      <th>Period</th><th class="l">Status</th><th>Late fee</th><th>Interest</th><th>RCM liability</th><th class="l">Flags</th></tr></thead><tbody>`;
+  for(const r of rows){
+    const flags = [];
+    if(r.late>0) flags.push('<span class="pill late">Late fee</span>');
+    if(r.intr>0) flags.push('<span class="pill late">Interest</span>');
+    if(r.rcm>0) flags.push('<span class="pill rcm">RCM</span>');
+    if(!r.hasData) flags.push('<span class="pill rcm">Check PDF</span>');
+    if(!flags.length) flags.push('<span class="pill ok">Clean</span>');
+    h += `<tr><td>${esc(r.label)}</td><td style="text-align:left"><span class="pill ${r.cls}">${r.status}</span></td>
+      <td class="${r.late>0?'neg':''}">${fmtIN(r.late)}</td><td class="${r.intr>0?'neg':''}">${fmtIN(r.intr)}</td>
+      <td class="${r.rcm>0?'neg':''}">${fmtIN(r.rcm)}</td><td style="text-align:left">${flags.join(' ')}</td></tr>`;
+  }
+  const tl=rows.reduce((s,r)=>s+r.late,0), ti=rows.reduce((s,r)=>s+r.intr,0), tr=rows.reduce((s,r)=>s+r.rcm,0);
+  h += `</tbody><tfoot><tr><td>Total</td><td></td><td>${fmtIN(tl)}</td><td>${fmtIN(ti)}</td><td>${fmtIN(tr)}</td><td></td></tr></tfoot></table></div></section>`;
+
+  if(PERIODS[0]&&PERIODS[0].label.length<8 && missing.length && missing.length<12){
+    h += `<div class="note"><b>Not uploaded:</b> ${missing.map(esc).join(', ')}. Add these months' GSTR-3B PDFs for a complete year before annual-return work.</div>`;
+  }
+  h += `<div class="note" style="border-left:3px solid var(--gold)"><b>Note.</b> A late fee or interest figure in a month usually means that return was filed after the due date. This is a signal to review, not a penalty calculation — confirm the exact position on the portal.</div>`;
+  $('compliance-body').innerHTML = h;
 }
 
-/* ---------- Print ---------- */
-document.getElementById("btnPrint").addEventListener("click",()=>window.print());
-
-/* ---------- Reset ---------- */
-document.getElementById("btnReset").addEventListener("click",()=>{
-  queued=[]; records=[]; fileInput.value="";
-  renderQueue(); hideMsg();
-  document.getElementById("report").classList.remove("show");
-  ["btnPrint","btnCsv","btnXls","btnReset"].forEach(id=>document.getElementById(id).disabled=true);
-  window.scrollTo({top:0,behavior:"smooth"});
-});
-
-/* ---------- shared: read a cell's display value (handles editable inputs) ---------- */
+/* ---------- exports ---------- */
 function cellText(td){
   const inp = td.querySelector("input");
-  if(inp){
-    const v = toNum(inp.value);
-    return v===null ? (inp.placeholder ? "0.00" : "N/A") : fmtIN(v);
-  }
-  // strip helper hint text like "editable"
+  if(inp){ const v=toNum(inp.value); return v===null ? (inp.placeholder?"0.00":"0.00") : fmtIN(v); }
   return td.textContent.replace(/\s*editable\s*$/i,"").trim();
 }
-
-/* iterate the six tables, calling fn(title, headers[], rows[][], foots[][]) */
 function eachTable(fn){
-  const defs=[
-    ["Table 1 — Outward Supplies","t1"],
-    ["Table 2 — Net GST Input (ITC)","t2"],
-    ["Table 3 — RCM Inward Supplies","t3"],
-    ["Table 4 — Late Fees & Interest","t4"],
-    ["Table 5 — GST Calculation Summary","t5"],
-    ["Table 6 — Input Balance (GST Portal)","t6"]
-  ];
-  defs.forEach(([title,id])=>{
-    const heads=[...document.querySelectorAll("#"+id+" thead th")].map(th=>th.textContent.trim());
-    const rows=[...document.querySelectorAll("#"+id+" tbody tr")].map(tr=>[...tr.children].map(cellText));
-    const foots=[...document.querySelectorAll("#"+id+" tfoot tr")].map(tr=>[...tr.children].map(cellText));
-    fn(title,heads,rows,foots,id);
+  const blocks = $('summary-body').querySelectorAll('section.block');
+  const titles = ['Table 1 — Outward Supplies','Table 2 — Net GST Input (ITC)','Table 3 — RCM Inward Supplies','Table 4 — Late Fees & Interest','Table 5 — GST Calculation Summary','Table 6 — Input Balance (GST Portal)'];
+  blocks.forEach((sec,idx)=>{
+    const heads=[...sec.querySelectorAll('thead th')].map(th=>th.textContent.trim());
+    const rows=[...sec.querySelectorAll('tbody tr')].map(tr=>[...tr.children].map(cellText));
+    const foots=[...sec.querySelectorAll('tfoot tr')].map(tr=>[...tr.children].map(cellText));
+    fn(titles[idx]||('Table '+(idx+1)),heads,rows,foots);
   });
+  // cash working
+  if(window.__cashRows){
+    const heads=['Period','Output tax','ITC available','ITC set off','Net tax (cash)','ITC carried fwd','RCM (cash)','Late fee','Interest','Cash outflow'];
+    const rows=window.__cashRows.map(r=>[r.label,fmtIN(r.output),fmtIN(r.itc),fmtIN(r.setoff),fmtIN(r.netTax),fmtIN(r.carry),fmtIN(r.rcm),fmtIN(r.late),fmtIN(r.intr),fmtIN(r.cash)]);
+    const T=k=>window.__cashRows.reduce((s,r)=>s+r[k],0);
+    const foots=[['Total',fmtIN(T('output')),fmtIN(T('itc')),fmtIN(T('setoff')),fmtIN(T('netTax')),fmtIN(T('carry')),fmtIN(T('rcm')),fmtIN(T('late')),fmtIN(T('intr')),fmtIN(T('cash'))]];
+    fn('Table 7 — Tax vs Cash (derived)',heads,rows,foots);
+  }
 }
-
-/* ---------- CSV export ---------- */
-document.getElementById("btnCsv").addEventListener("click",()=>{
-  const lines=[]; const esc=s=>`"${String(s).replace(/"/g,'""')}"`;
-  lines.push(esc("GSTR-3B Summary – FY "+fyLabel)); lines.push("");
-  eachTable((title,heads,rows,foots)=>{
-    lines.push(esc(title));
-    lines.push(heads.map(esc).join(","));
-    rows.forEach(r=>lines.push(r.map(esc).join(",")));
-    foots.forEach(r=>lines.push(r.map(esc).join(",")));
-    lines.push("");
-  });
-  downloadBlob(lines.join("\n"),"text/csv;charset=utf-8;",`GSTR3B_Summary_FY_${fyLabel}.csv`);
-});
-
-/* ---------- Excel export (.xls — SpreadsheetML/HTML table, opens in Excel) ---------- */
-document.getElementById("btnXls").addEventListener("click",()=>{
-  const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const isNum=s=>/^-?[\d,]+\.\d{2}$/.test(s) || /^-?[\d,]+$/.test(s);
-  const cellXls=v=>{
-    if(v==="N/A"||v===""||!isNum(v)) return `<td>${esc(v)}</td>`;
-    return `<td style="mso-number-format:'#\\,##0.00';text-align:right">${esc(v.replace(/,/g,""))}</td>`;
-  };
-  let body="";
-  body+=`<tr><td colspan="6" style="font-size:15px;font-weight:bold;background:#0b3a2e;color:#fff">GSTR-3B Summary – FY ${esc(fyLabel)}</td></tr><tr></tr>`;
-  eachTable((title,heads,rows,foots)=>{
-    body+=`<tr><td colspan="6" style="font-weight:bold;background:#0d5742;color:#fff">${esc(title)}</td></tr>`;
-    body+=`<tr>${heads.map(h=>`<th style="background:#0b3a2e;color:#fff;font-weight:bold">${esc(h)}</th>`).join("")}</tr>`;
-    rows.forEach(r=>{ body+=`<tr>${r.map(cellXls).join("")}</tr>`; });
-    foots.forEach(r=>{ body+=`<tr style="font-weight:bold;background:#eef3ee">${r.map(cellXls).join("")}</tr>`; });
-    body+=`<tr></tr>`;
-  });
-  const html =
-    `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">`+
-    `<head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>`+
-    `<x:Name>GSTR-3B Summary</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>`+
-    `</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head>`+
-    `<body><table border="1" cellspacing="0" cellpadding="4">${body}</table></body></html>`;
-  downloadBlob(html,"application/vnd.ms-excel",`GSTR3B_Summary_FY_${fyLabel}.xls`);
-});
-
 function downloadBlob(content,mime,filename){
   const blob=new Blob([content],{type:mime});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download=filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const a=document.createElement("a"); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
+$('csvBtn').addEventListener('click',()=>{
+  const lines=[]; const q=s=>`"${String(s).replace(/"/g,'""')}"`;
+  lines.push(q("GSTR-3B Summary – FY "+fyLabel)); lines.push("");
+  eachTable((title,heads,rows,foots)=>{
+    lines.push(q(title)); lines.push(heads.map(q).join(","));
+    rows.forEach(r=>lines.push(r.map(q).join(",")));
+    foots.forEach(r=>lines.push(r.map(q).join(",")));
+    lines.push("");
+  });
+  downloadBlob(lines.join("\n"),"text/csv;charset=utf-8;",`GSTR3B_Summary_FY_${fyLabel}.csv`);
+  toast('CSV downloaded');
+});
+$('xlsBtn').addEventListener('click',()=>{
+  const e=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const isNum=s=>/^-?[\d,]+\.\d{2}$/.test(s)||/^-?[\d,]+$/.test(s);
+  const cx=v=>(v==="N/A"||v===""||!isNum(v))?`<td>${e(v)}</td>`:`<td style="mso-number-format:'#\\,##0.00';text-align:right">${e(v.replace(/,/g,""))}</td>`;
+  let body=`<tr><td colspan="10" style="font-size:15px;font-weight:bold;background:#0a5c4b;color:#fff">GSTR-3B Summary – FY ${e(fyLabel)}</td></tr><tr></tr>`;
+  eachTable((title,heads,rows,foots)=>{
+    body+=`<tr><td colspan="10" style="font-weight:bold;background:#0e7c66;color:#fff">${e(title)}</td></tr>`;
+    body+=`<tr>${heads.map(h=>`<th style="background:#0a5c4b;color:#fff;font-weight:bold">${e(h)}</th>`).join("")}</tr>`;
+    rows.forEach(r=>{ body+=`<tr>${r.map(cx).join("")}</tr>`; });
+    foots.forEach(r=>{ body+=`<tr style="font-weight:bold;background:#e3f2ec">${r.map(cx).join("")}</tr>`; });
+    body+=`<tr></tr>`;
+  });
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>GSTR-3B Summary</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body><table border="1" cellspacing="0" cellpadding="4">${body}</table></body></html>`;
+  downloadBlob(html,"application/vnd.ms-excel",`GSTR3B_Summary_FY_${fyLabel}.xls`);
+  toast('Excel downloaded');
+});
+$('printBtn').addEventListener('click',()=>{ switchPane('summary'); setTimeout(()=>window.print(),150); });
+
+/* ---------- reset ---------- */
+$('resetBtn').addEventListener('click',()=>{
+  queued=[]; records=[]; PERIODS=[]; $('fileInput').value='';
+  renderQueue(); hideMsg();
+  $('cards').innerHTML=''; $('analyze-hint').innerHTML='';
+  $('summary-body').innerHTML='<div class="muted">Upload GSTR-3B PDFs and generate the summary — the six consolidated tables will appear here.</div>';
+  $('report-head-summary').innerHTML='';
+  $('cash-body').innerHTML='<div class="muted">Generate the summary first — the month-wise tax-vs-cash working will appear here.</div>';
+  $('compliance-body').innerHTML='<div class="muted">Generate the summary first — the compliance snapshot will appear here.</div>';
+  ['xlsBtn','csvBtn','printBtn'].forEach(id=>$(id).disabled=true);
+  $('resetBtn').style.display='none';
+  setBadge('badge-comp',0);
+  switchPane('analyze');
+});
+
+/* ---------- tabs ---------- */
+function switchPane(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.pane===name));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active',p.id==='pane-'+name));
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchPane(t.dataset.pane));
 </script>
 </body>
 </html>
