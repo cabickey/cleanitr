@@ -1,6 +1,6 @@
 ---
 title: "Documents Required for LLP Registration in India: A Complete Checklist (2026)"
-category: Business
+category: Corporate Compliance
 readtime: 8 min read
 date: 2026-07-11T10:00:00.000+05:30
 image: /images/uploads/llp-registration-checklist.png
