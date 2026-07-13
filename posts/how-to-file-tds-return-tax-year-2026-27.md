@@ -4,6 +4,7 @@ title: "How to File TDS Return for Tax Year 2026-27: Complete Guide with New
 category: TDS
 readtime: 15 Min Read
 date: 2026-07-13T21:22:00.000+05:30
+image: /images/uploads/tds.png
 summary: >-
   If you filed a Form 24Q or Form 26Q in May 2026, your July filing is not a
   Form 24Q or 26Q. It is a Form 138 or Form 140.
